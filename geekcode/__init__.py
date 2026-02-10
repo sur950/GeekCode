@@ -17,7 +17,7 @@ Architecture:
 - Zero CLI memory, full filesystem persistence
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "GeekCode Team"
 __license__ = "Apache-2.0"
 

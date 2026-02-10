@@ -232,6 +232,9 @@ class Config:
             "openai": "OPENAI_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY",
             "google": "GOOGLE_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "openrouter": "OPENROUTER_API_KEY",
+            "together": "TOGETHER_API_KEY",
         }
 
         env_var = env_var_map.get(provider_name)

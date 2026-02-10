@@ -480,6 +480,9 @@ class Agent:
                     "openai": "OPENAI_API_KEY",
                     "anthropic": "ANTHROPIC_API_KEY",
                     "google": "GOOGLE_API_KEY",
+                    "groq": "GROQ_API_KEY",
+                    "openrouter": "OPENROUTER_API_KEY",
+                    "together": "TOGETHER_API_KEY",
                 }
                 return os.environ.get(env_map.get(provider, ""))
 
@@ -495,6 +498,7 @@ class Agent:
                 class AgentConfig:
                     max_tokens = 4096
                     temperature = 0.7
+                    timeout = 120
                 return AgentConfig()
 
         wrapper = ConfigWrapper(config)
