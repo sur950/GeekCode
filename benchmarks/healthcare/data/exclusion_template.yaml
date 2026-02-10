@@ -1,0 +1,112 @@
+# Standard exclusion categories for health insurance policies
+# Use this template when reviewing policies for Task 2
+
+categories:
+  pre_existing_conditions:
+    description: "Conditions diagnosed or treated before coverage began"
+    typical_waiting_period: "6-12 months"
+    common_exceptions:
+      - "Pregnancy"
+      - "Newborn genetic conditions"
+    regulatory_notes: "ACA prohibits for individual/small group"
+
+  experimental_investigational:
+    description: "Treatments not yet proven safe and effective"
+    definition_criteria:
+      - "Not FDA approved for condition"
+      - "Under clinical investigation"
+      - "Not accepted by medical community"
+    common_exceptions:
+      - "Qualified clinical trials (ACA requirement)"
+      - "Compassionate use programs"
+
+  cosmetic_procedures:
+    description: "Procedures primarily for appearance"
+    examples:
+      - "Face lifts"
+      - "Rhinoplasty (non-medical)"
+      - "Liposuction"
+      - "Hair transplants"
+    common_exceptions:
+      - "Reconstructive surgery following illness/injury"
+      - "Congenital defect correction (pediatric)"
+      - "Breast reconstruction after mastectomy (WHCRA)"
+
+  custodial_care:
+    description: "Non-medical assistance with daily activities"
+    covered_alternatives:
+      - "Skilled nursing care"
+      - "Physical therapy"
+    common_exceptions:
+      - "Skilled care in nursing facility"
+      - "Home health with medical necessity"
+
+  workers_compensation:
+    description: "Injuries/illness covered by workers comp"
+    coordination: "Primary to health insurance"
+    common_exceptions:
+      - "When WC claim is disputed"
+      - "When WC benefits exhausted"
+
+  motor_vehicle:
+    description: "Injuries from auto accidents"
+    coordination: "No-fault/PIP primary"
+    common_exceptions:
+      - "When auto coverage exhausted"
+      - "When no auto insurance exists"
+
+  war_terrorism:
+    description: "Injuries from war or terrorism"
+    typical_language: "Act of war, insurrection, or terrorism"
+    regulatory_notes: "May conflict with state mandates"
+
+  self_inflicted:
+    description: "Intentionally self-inflicted injuries"
+    important_notes:
+      - "Must exclude mental health conditions"
+      - "Suicide attempts may be covered if mental illness"
+    regulatory_concerns: "Parity law implications"
+
+  infertility:
+    description: "Fertility treatments and services"
+    examples:
+      - "IVF"
+      - "Artificial insemination"
+      - "Fertility drugs"
+    state_mandates: "Many states require coverage"
+
+  weight_loss:
+    description: "Weight loss programs and surgery"
+    examples:
+      - "Diet programs"
+      - "Weight loss drugs"
+      - "Bariatric surgery"
+    trends: "Increasing coverage for bariatric"
+
+  dental_vision:
+    description: "Routine dental and vision care"
+    common_exceptions:
+      - "Dental due to accident"
+      - "Eye exams for diabetes"
+    typical_riders: "Supplemental dental/vision available"
+
+  alternative_medicine:
+    description: "Non-traditional treatments"
+    examples:
+      - "Acupuncture"
+      - "Naturopathy"
+      - "Homeopathy"
+    trends: "Some plans adding acupuncture coverage"
+
+output_format:
+  exclusion_id: string
+  category: string
+  policy_section: string
+  page: integer
+  exact_language: string
+  type: enum [absolute, conditional, time_limited]
+  exceptions: list
+  state_mandate_conflict: boolean
+  conflict_detail: string
+  risk_level: enum [low, medium, high]
+  notes: string

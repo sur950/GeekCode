@@ -1,0 +1,157 @@
+# Coverage eligibility scenarios for Task 1
+# Each scenario should be evaluated against the health policy
+
+scenarios:
+  - id: SCENARIO-1
+    title: "Pre-existing Condition After Waiting Period"
+    member:
+      name: "John Smith"
+      dob: "1985-03-15"
+      enrollment_date: "2024-01-01"
+    service:
+      date: "2024-07-15"
+      type: "Outpatient visit"
+      diagnosis: "Type 2 Diabetes (E11.9)"
+      procedure: "Office visit, established patient (99214)"
+    questions:
+      - "Is this service covered?"
+      - "What is the member's cost share?"
+      - "Is prior authorization required?"
+
+  - id: SCENARIO-2
+    title: "Out-of-Network Emergency Care"
+    member:
+      name: "Sarah Johnson"
+      dob: "1990-06-22"
+      enrollment_date: "2023-07-01"
+    service:
+      date: "2024-03-10"
+      type: "Emergency room"
+      diagnosis: "Acute appendicitis (K35.80)"
+      procedure: "ER visit, high severity (99285)"
+      provider_status: "Out-of-network"
+    questions:
+      - "Is this covered at in-network rates?"
+      - "Can the member be balance billed?"
+      - "What cost-sharing applies?"
+
+  - id: SCENARIO-3
+    title: "Experimental Treatment Request"
+    member:
+      name: "Michael Chen"
+      dob: "1975-11-08"
+      enrollment_date: "2022-01-01"
+    service:
+      date: "2024-05-20"
+      type: "Inpatient procedure"
+      diagnosis: "Stage IV lung cancer (C34.90)"
+      procedure: "CAR-T cell therapy"
+      fda_status: "FDA approved for different indication"
+    questions:
+      - "Is CAR-T therapy covered for this diagnosis?"
+      - "What documentation is required?"
+      - "What are appeal rights if denied?"
+
+  - id: SCENARIO-4
+    title: "Mental Health Parity Compliance"
+    member:
+      name: "Emily Rodriguez"
+      dob: "1995-02-14"
+      enrollment_date: "2023-09-01"
+    service:
+      date: "2024-04-01"
+      type: "Outpatient mental health"
+      diagnosis: "Major depressive disorder (F32.1)"
+      procedure: "Intensive Outpatient Program (IOP)"
+      sessions_requested: 20
+    questions:
+      - "Is IOP covered?"
+      - "Are there visit limits?"
+      - "How does parity apply?"
+
+  - id: SCENARIO-5
+    title: "Preventive Care Coverage"
+    member:
+      name: "Robert Taylor"
+      dob: "1968-09-30"
+      enrollment_date: "2024-01-01"
+    service:
+      date: "2024-02-15"
+      type: "Preventive visit"
+      diagnosis: "Encounter for screening (Z12.11)"
+      procedure: "Colonoscopy, screening (G0121)"
+    questions:
+      - "Is the screening covered at 100%?"
+      - "What if polyps are found and removed?"
+      - "Is there an age requirement?"
+
+  - id: SCENARIO-6
+    title: "Durable Medical Equipment"
+    member:
+      name: "Patricia Williams"
+      dob: "1955-04-18"
+      enrollment_date: "2023-01-01"
+    service:
+      date: "2024-06-01"
+      type: "DME"
+      diagnosis: "Sleep apnea (G47.33)"
+      equipment: "CPAP machine and supplies"
+    questions:
+      - "Is the CPAP covered?"
+      - "Is prior authorization required?"
+      - "How are ongoing supplies covered?"
+
+  - id: SCENARIO-7
+    title: "Telehealth Services"
+    member:
+      name: "David Martinez"
+      dob: "1982-12-05"
+      enrollment_date: "2022-06-01"
+    service:
+      date: "2024-03-25"
+      type: "Telehealth"
+      diagnosis: "Anxiety disorder (F41.1)"
+      procedure: "Telehealth E/M visit (99213-95)"
+      originating_site: "Patient's home"
+    questions:
+      - "Is telehealth covered from home?"
+      - "Is cost-sharing the same as in-person?"
+      - "Are there visit limits for telehealth?"
+
+  - id: SCENARIO-8
+    title: "Prescription Drug Tier Exception"
+    member:
+      name: "Jennifer Brown"
+      dob: "1988-07-12"
+      enrollment_date: "2023-03-01"
+    service:
+      date: "2024-05-10"
+      type: "Prescription drug"
+      diagnosis: "Rheumatoid arthritis (M06.9)"
+      medication: "Humira (adalimumab)"
+      tier: "Specialty (Tier 5)"
+      step_therapy: "Failed methotrexate, Enbrel"
+    questions:
+      - "What is the member cost for Tier 5?"
+      - "Can a tier exception be requested?"
+      - "Is step therapy required?"
+
+expected_output:
+  determination:
+    status: string  # COVERED, NOT_COVERED, PARTIALLY_COVERED
+    rationale: string
+  policy_references:
+    - section: string
+      page: integer
+      text: string
+  cost_sharing:
+    deductible_applies: boolean
+    copay: number
+    coinsurance: number
+    out_of_pocket_estimate: number
+  prior_authorization:
+    required: boolean
+    reason: string
+  appeal_rights:
+    applicable: boolean
+    reason: string

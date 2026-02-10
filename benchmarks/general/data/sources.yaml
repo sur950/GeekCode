@@ -1,0 +1,178 @@
+# Research sources for Task 1: Multi-Step Research & Summary
+# Topic: AI Regulation Impact on Startup Innovation (EU vs US)
+
+sources:
+  - id: SOURCE-1
+    type: report
+    title: "EU AI Act: Final Text Analysis"
+    publisher: "European Commission"
+    date: "2024-03"
+    url: "https://example.com/eu-ai-act-final"
+    key_topics:
+      - "Risk classification framework"
+      - "Compliance requirements"
+      - "Timeline for implementation"
+
+  - id: SOURCE-2
+    type: report
+    title: "State of AI Startup Funding 2024"
+    publisher: "Crunchbase"
+    date: "2024-06"
+    url: "https://example.com/ai-funding-2024"
+    key_topics:
+      - "US vs EU funding comparison"
+      - "Quarter-over-quarter trends"
+      - "Sector breakdown"
+
+  - id: SOURCE-3
+    type: article
+    title: "How EU AI Act is Reshaping Startup Strategy"
+    publisher: "TechCrunch"
+    date: "2024-05"
+    url: "https://example.com/eu-ai-startups"
+    key_topics:
+      - "Compliance costs estimates"
+      - "Startup pivot examples"
+      - "Investor concerns"
+
+  - id: SOURCE-4
+    type: whitepaper
+    title: "US AI Governance: A Sectoral Approach"
+    publisher: "Brookings Institution"
+    date: "2024-02"
+    url: "https://example.com/us-ai-governance"
+    key_topics:
+      - "Agency-by-agency breakdown"
+      - "Executive Order analysis"
+      - "Comparison with EU approach"
+
+  - id: SOURCE-5
+    type: data
+    title: "AI Patent Filings by Region 2023-2024"
+    publisher: "WIPO"
+    date: "2024-04"
+    url: "https://example.com/ai-patents"
+    key_topics:
+      - "Patent volume trends"
+      - "Country comparison"
+      - "Technology categories"
+
+  - id: SOURCE-6
+    type: interview
+    title: "EU AI Startup Founder Perspectives"
+    publisher: "Sifted"
+    date: "2024-06"
+    url: "https://example.com/founder-interviews"
+    key_topics:
+      - "Founder sentiment"
+      - "Relocation considerations"
+      - "Regulatory burden"
+
+  - id: SOURCE-7
+    type: analysis
+    title: "Compliance Costs: AI Act Impact Study"
+    publisher: "CEPS"
+    date: "2024-01"
+    url: "https://example.com/compliance-costs"
+    key_topics:
+      - "Cost estimates by company size"
+      - "Documentation requirements"
+      - "Conformity assessment"
+
+  - id: SOURCE-8
+    type: article
+    title: "US Startups Embrace AI Self-Regulation"
+    publisher: "Forbes"
+    date: "2024-04"
+    url: "https://example.com/us-self-regulation"
+    key_topics:
+      - "Industry commitments"
+      - "Voluntary frameworks"
+      - "Effectiveness debate"
+
+  - id: SOURCE-9
+    type: data
+    title: "AI Startup Exits: M&A and IPO Tracker"
+    publisher: "PitchBook"
+    date: "2024-06"
+    url: "https://example.com/ai-exits"
+    key_topics:
+      - "Exit value comparison"
+      - "Acquirer analysis"
+      - "Regional trends"
+
+  - id: SOURCE-10
+    type: opinion
+    title: "Why EU AI Regulation Will Boost Innovation"
+    publisher: "Wired"
+    date: "2024-03"
+    url: "https://example.com/pro-eu-regulation"
+    key_topics:
+      - "Trust as competitive advantage"
+      - "Market access benefits"
+      - "Long-term thinking"
+
+  - id: SOURCE-11
+    type: opinion
+    title: "EU AI Act: Innovation Killer?"
+    publisher: "The Economist"
+    date: "2024-04"
+    url: "https://example.com/anti-eu-regulation"
+    key_topics:
+      - "Compliance burden"
+      - "Brain drain concerns"
+      - "Competitive disadvantage"
+
+  - id: SOURCE-12
+    type: report
+    title: "Global AI Index 2024"
+    publisher: "Stanford HAI"
+    date: "2024-05"
+    url: "https://example.com/global-ai-index"
+    key_topics:
+      - "Multi-factor comparison"
+      - "Investment metrics"
+      - "Research output"
+
+research_template:
+  executive_summary:
+    max_words: 200
+    required_elements:
+      - "Key findings"
+      - "Main conclusion"
+      - "Implications"
+
+  sections:
+    - name: "Regulatory Landscape"
+      subsections:
+        - "EU AI Act overview"
+        - "US approach summary"
+        - "Key differences table"
+
+    - name: "Impact on Startups"
+      subsections:
+        - "Funding trends"
+        - "Compliance costs"
+        - "Case studies"
+
+    - name: "Innovation Metrics"
+      subsections:
+        - "Patent data"
+        - "Funding rounds"
+        - "Exit activity"
+
+    - name: "Expert Opinions"
+      subsections:
+        - "Pro-regulation views"
+        - "Anti-regulation views"
+        - "Synthesis"
+
+    - name: "Conclusions"
+      subsections:
+        - "Summary of findings"
+        - "Predictions"
+        - "Recommendations"
+
+  bibliography:
+    format: "APA 7th edition"
+    minimum_sources: 12

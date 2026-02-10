@@ -1,0 +1,62 @@
+# Policy interpretation questions for Task 1
+# These questions should be answered using the commercial_policy.pdf
+
+questions:
+  - id: Q1
+    question: "What is the aggregate limit for professional liability?"
+    category: limits
+    difficulty: easy
+
+  - id: Q2
+    question: "Are cyber incidents covered under general liability?"
+    category: coverage
+    difficulty: medium
+
+  - id: Q3
+    question: "What is the deductible for property damage claims?"
+    category: deductible
+    difficulty: easy
+
+  - id: Q4
+    question: "Are independent contractors covered as insureds?"
+    category: insureds
+    difficulty: medium
+
+  - id: Q5
+    question: "What are the notice requirements for claims?"
+    category: conditions
+    difficulty: easy
+
+  - id: Q6
+    question: "Does coverage apply to punitive damages?"
+    category: damages
+    difficulty: hard
+
+  - id: Q7
+    question: "What is the retroactive date for claims-made coverage?"
+    category: dates
+    difficulty: medium
+
+  - id: Q8
+    question: "Are defense costs inside or outside the limit?"
+    category: limits
+    difficulty: medium
+
+  - id: Q9
+    question: "What exclusions apply to contractual liability?"
+    category: exclusions
+    difficulty: hard
+
+  - id: Q10
+    question: "How does the policy define 'occurrence'?"
+    category: definitions
+    difficulty: easy
+
+expected_format:
+  answer: string
+  citations:
+    - section: string
+      page: integer
+      quote: string
+  confidence: float  # 0.0 to 1.0
+  notes: string  # Optional clarifications

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 500" width="660" height="500" style="font-family:system-ui,sans-serif;background:#fff">
+<text x="330.0" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a1a2e">Domain Score Comparison</text>
+<polygon points="330.0,207.5 372.5,250.0 330.0,292.5 287.5,250.0" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+<text x="334" y="204" font-size="10" fill="#94a3b8">25</text>
+<polygon points="330.0,165.0 415.0,250.0 330.0,335.0 245.0,250.0" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+<text x="334" y="161" font-size="10" fill="#94a3b8">50</text>
+<polygon points="330.0,122.5 457.5,250.0 330.0,377.5 202.5,250.0" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+<text x="334" y="118" font-size="10" fill="#94a3b8">75</text>
+<polygon points="330.0,80.0 500.0,250.0 330.0,420.0 160.0,250.0" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+<text x="334" y="76" font-size="10" fill="#94a3b8">100</text>
+<line x1="330.0" y1="250.0" x2="330.0" y2="80.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="330" y="58" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">Coding</text>
+<line x1="330.0" y1="250.0" x2="500.0" y2="250.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="522" y="250" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">Finance</text>
+<line x1="330.0" y1="250.0" x2="330.0" y2="420.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="330" y="442" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">Healthcare</text>
+<line x1="330.0" y1="250.0" x2="160.0" y2="250.0" stroke="#cbd5e1" stroke-width="1"/>
+<text x="138" y="250" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">General/Research</text>
+<polygon points="330.0,106.3 330.0,250.0 330.0,250.0 330.0,250.0" fill="#DC2626" fill-opacity="0.15" stroke="#DC2626" stroke-width="2.5"/>
+<circle cx="330.0" cy="106.3" r="4" fill="#DC2626"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#DC2626"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#DC2626"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#DC2626"/>
+<polygon points="330.0,250.0 453.8,250.0 330.0,368.8 206.6,250.0" fill="#10B981" fill-opacity="0.15" stroke="#10B981" stroke-width="2.5"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#10B981"/>
+<circle cx="453.8" cy="250.0" r="4" fill="#10B981"/>
+<circle cx="330.0" cy="368.8" r="4" fill="#10B981"/>
+<circle cx="206.6" cy="250.0" r="4" fill="#10B981"/>
+<polygon points="330.0,104.7 330.0,250.0 330.0,250.0 330.0,250.0" fill="#D97706" fill-opacity="0.15" stroke="#D97706" stroke-width="2.5"/>
+<circle cx="330.0" cy="104.7" r="4" fill="#D97706"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#D97706"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#D97706"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#D97706"/>
+<polygon points="330.0,109.1 330.0,250.0 330.0,250.0 330.0,250.0" fill="#0EA5E9" fill-opacity="0.15" stroke="#0EA5E9" stroke-width="2.5"/>
+<circle cx="330.0" cy="109.1" r="4" fill="#0EA5E9"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#0EA5E9"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#0EA5E9"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#0EA5E9"/>
+<polygon points="330.0,104.7 460.4,250.0 330.0,373.6 199.1,250.0" fill="#6C63FF" fill-opacity="0.15" stroke="#6C63FF" stroke-width="2.5"/>
+<circle cx="330.0" cy="104.7" r="4" fill="#6C63FF"/>
+<circle cx="460.4" cy="250.0" r="4" fill="#6C63FF"/>
+<circle cx="330.0" cy="373.6" r="4" fill="#6C63FF"/>
+<circle cx="199.1" cy="250.0" r="4" fill="#6C63FF"/>
+<polygon points="330.0,250.0 445.1,250.0 330.0,360.2 212.7,250.0" fill="#F59E0B" fill-opacity="0.15" stroke="#F59E0B" stroke-width="2.5"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#F59E0B"/>
+<circle cx="445.1" cy="250.0" r="4" fill="#F59E0B"/>
+<circle cx="330.0" cy="360.2" r="4" fill="#F59E0B"/>
+<circle cx="212.7" cy="250.0" r="4" fill="#F59E0B"/>
+<polygon points="330.0,250.0 448.3,250.0 330.0,364.6 207.3,250.0" fill="#7C3AED" fill-opacity="0.15" stroke="#7C3AED" stroke-width="2.5"/>
+<circle cx="330.0" cy="250.0" r="4" fill="#7C3AED"/>
+<circle cx="448.3" cy="250.0" r="4" fill="#7C3AED"/>
+<circle cx="330.0" cy="364.6" r="4" fill="#7C3AED"/>
+<circle cx="207.3" cy="250.0" r="4" fill="#7C3AED"/>
+<rect x="40" y="460" width="14" height="14" rx="3" fill="#DC2626"/>
+<text x="60" y="472" font-size="12" fill="#475569">Aider</text>
+<rect x="123" y="460" width="14" height="14" rx="3" fill="#10B981"/>
+<text x="143" y="472" font-size="12" fill="#475569">ChatGPT CLI</text>
+<rect x="206" y="460" width="14" height="14" rx="3" fill="#D97706"/>
+<text x="226" y="472" font-size="12" fill="#475569">Claude Code</text>
+<rect x="289" y="460" width="14" height="14" rx="3" fill="#0EA5E9"/>
+<text x="309" y="472" font-size="12" fill="#475569">Codex CLI</text>
+<rect x="371" y="460" width="14" height="14" rx="3" fill="#6C63FF"/>
+<text x="391" y="472" font-size="12" fill="#475569">GeekCode</text>
+<rect x="454" y="460" width="14" height="14" rx="3" fill="#F59E0B"/>
+<text x="474" y="472" font-size="12" fill="#475569">Gemini CLI</text>
+<rect x="537" y="460" width="14" height="14" rx="3" fill="#7C3AED"/>
+<text x="557" y="472" font-size="12" fill="#475569">Perplexity</text>
+</svg>

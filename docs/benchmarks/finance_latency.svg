@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 260" width="500" height="260" style="font-family:system-ui,sans-serif;background:#fff">
+<text x="250.0" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">Finance — Avg Latency (s)</text>
+<text x="112" y="73" text-anchor="end" font-size="12" fill="#475569">ChatGPT CLI</text>
+<rect x="120" y="53.5" width="330.0" height="31.7" rx="4" fill="#10B981"/>
+<text x="456" y="73" font-size="12" font-weight="bold" fill="#10B981">25.6s</text>
+<text x="112" y="122" text-anchor="end" font-size="12" fill="#475569">GeekCode</text>
+<rect x="120" y="102.3" width="300.1" height="31.7" rx="4" fill="#6C63FF"/>
+<text x="426" y="122" font-size="12" font-weight="bold" fill="#6C63FF">23.3s</text>
+<text x="112" y="171" text-anchor="end" font-size="12" fill="#475569">Gemini CLI</text>
+<rect x="120" y="151.0" width="313.0" height="31.7" rx="4" fill="#F59E0B"/>
+<text x="439" y="171" font-size="12" font-weight="bold" fill="#F59E0B">24.3s</text>
+<text x="112" y="220" text-anchor="end" font-size="12" fill="#475569">Perplexity</text>
+<rect x="120" y="199.8" width="283.1" height="31.7" rx="4" fill="#7C3AED"/>
+<text x="409" y="220" font-size="12" font-weight="bold" fill="#7C3AED">22.0s</text>
+</svg>

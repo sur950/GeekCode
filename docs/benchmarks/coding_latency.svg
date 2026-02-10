@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 260" width="500" height="260" style="font-family:system-ui,sans-serif;background:#fff">
+<text x="250.0" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">Coding — Avg Latency (s)</text>
+<text x="112" y="73" text-anchor="end" font-size="12" fill="#475569">Aider</text>
+<rect x="120" y="53.5" width="270.9" height="31.7" rx="4" fill="#DC2626"/>
+<text x="397" y="73" font-size="12" font-weight="bold" fill="#DC2626">11.3s</text>
+<text x="112" y="122" text-anchor="end" font-size="12" fill="#475569">Claude Code</text>
+<rect x="120" y="102.3" width="326.4" height="31.7" rx="4" fill="#D97706"/>
+<text x="452" y="122" font-size="12" font-weight="bold" fill="#D97706">13.7s</text>
+<text x="112" y="171" text-anchor="end" font-size="12" fill="#475569">Codex CLI</text>
+<rect x="120" y="151.0" width="330.0" height="31.7" rx="4" fill="#0EA5E9"/>
+<text x="456" y="171" font-size="12" font-weight="bold" fill="#0EA5E9">13.8s</text>
+<text x="112" y="220" text-anchor="end" font-size="12" fill="#475569">GeekCode</text>
+<rect x="120" y="199.8" width="304.3" height="31.7" rx="4" fill="#6C63FF"/>
+<text x="430" y="220" font-size="12" font-weight="bold" fill="#6C63FF">12.7s</text>
+</svg>

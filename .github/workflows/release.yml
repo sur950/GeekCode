@@ -1,0 +1,165 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            target: macos-arm64
+            binary_name: geekcode-macos-arm64
+          - os: macos-13
+            target: macos-x64
+            binary_name: geekcode-macos-x64
+          - os: ubuntu-22.04
+            target: linux-x64
+            binary_name: geekcode-linux-x64
+          - os: windows-2022
+            target: win-x64
+            binary_name: geekcode-win-x64
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.target }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -e ".[all]"
+
+      - name: Build binary with PyInstaller
+        run: |
+          pyinstaller --onefile --name ${{ matrix.binary_name }} --collect-all geekcode geekcode/cli/main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.binary_name }}
+          path: dist/${{ matrix.binary_name }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-22.04
+    name: Create Release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          # macOS ARM64
+          cp artifacts/geekcode-macos-arm64/geekcode-macos-arm64 release-assets/
+          chmod +x release-assets/geekcode-macos-arm64
+
+          # macOS x64
+          cp artifacts/geekcode-macos-x64/geekcode-macos-x64 release-assets/
+          chmod +x release-assets/geekcode-macos-x64
+
+          # Linux x64
+          cp artifacts/geekcode-linux-x64/geekcode-linux-x64 release-assets/
+          chmod +x release-assets/geekcode-linux-x64
+
+          # Windows x64
+          cp artifacts/geekcode-win-x64/geekcode-win-x64.exe release-assets/
+
+          # Source tarball
+          tar -czf release-assets/geekcode-${{ steps.version.outputs.VERSION }}.tar.gz \
+            --exclude='.git' --exclude='dist' --exclude='build' --exclude='*.egg-info' .
+
+          # Generate SHA256 checksums
+          cd release-assets
+          sha256sum * > checksums-sha256.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: GeekCode v${{ steps.version.outputs.VERSION }}
+          body: |
+            ## GeekCode v${{ steps.version.outputs.VERSION }}
+
+            ### Installation
+
+            **macOS (Homebrew):**
+            ```bash
+            brew install sur950/geekcode/geekcode
+            ```
+
+            **macOS (direct download):**
+            ```bash
+            # Apple Silicon (M1/M2/M3/M4)
+            curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+
+            # Intel Mac
+            curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-macos-x64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+            ```
+
+            **Linux:**
+            ```bash
+            curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-linux-x64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+            ```
+
+            **Windows (Winget):**
+            ```powershell
+            winget install sur950.GeekCode
+            ```
+
+            **pip:**
+            ```bash
+            pip install geekcode
+            ```
+          files: release-assets/*
+          generate_release_notes: true
+
+  update-homebrew:
+    needs: release
+    runs-on: ubuntu-22.04
+    name: Update Homebrew Formula
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version and SHA256
+        id: info
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          SHA=$(curl -sL "https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz" | sha256sum | cut -d' ' -f1)
+          echo "SHA256=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Update formula
+        run: |
+          sed -i "s|url \".*\"|url \"https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz\"|" Formula/geekcode.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.info.outputs.SHA256 }}\"|" Formula/geekcode.rb
+
+      - name: Push updated formula
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "formula: update to v${{ steps.info.outputs.VERSION }}"
+          file_pattern: "Formula/geekcode.rb"

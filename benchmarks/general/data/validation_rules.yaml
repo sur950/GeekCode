@@ -1,0 +1,146 @@
+# Validation rules for Task 3: Long-Running Workflow
+
+version: "1.0"
+
+rules:
+  # Field presence rules
+  - id: "RULE-001"
+    name: "Required Fields Present"
+    type: "presence"
+    severity: "error"
+    fields:
+      - "id"
+      - "name"
+      - "date"
+    message: "Required field '{field}' is missing"
+
+  # Data type rules
+  - id: "RULE-002"
+    name: "ID is String"
+    type: "type_check"
+    severity: "error"
+    field: "id"
+    expected_type: "string"
+    message: "Field 'id' must be a string"
+
+  - id: "RULE-003"
+    name: "Amount is Numeric"
+    type: "type_check"
+    severity: "error"
+    field: "amount"
+    expected_type: "number"
+    message: "Field 'amount' must be a number"
+
+  - id: "RULE-004"
+    name: "Date Format Valid"
+    type: "format"
+    severity: "error"
+    field: "date"
+    pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    message: "Field 'date' must be in YYYY-MM-DD format"
+
+  # Range rules
+  - id: "RULE-005"
+    name: "Amount Non-Negative"
+    type: "range"
+    severity: "error"
+    field: "amount"
+    min: 0
+    message: "Field 'amount' must be non-negative"
+
+  - id: "RULE-006"
+    name: "Quantity Reasonable"
+    type: "range"
+    severity: "warning"
+    field: "quantity"
+    min: 1
+    max: 10000
+    message: "Field 'quantity' should be between 1 and 10000"
+
+  # Enum rules
+  - id: "RULE-007"
+    name: "Valid Category"
+    type: "enum"
+    severity: "error"
+    field: "category"
+    allowed_values:
+      - "electronics"
+      - "clothing"
+      - "food"
+      - "services"
+      - "other"
+    message: "Field 'category' must be a valid category"
+
+  - id: "RULE-008"
+    name: "Valid Status"
+    type: "enum"
+    severity: "error"
+    field: "status"
+    allowed_values:
+      - "pending"
+      - "approved"
+      - "rejected"
+      - "completed"
+    message: "Field 'status' must be a valid status"
+
+  # Uniqueness rules
+  - id: "RULE-009"
+    name: "Unique ID"
+    type: "unique"
+    severity: "error"
+    field: "id"
+    message: "Field 'id' must be unique across all records"
+
+  # Relationship rules
+  - id: "RULE-010"
+    name: "Completed Requires Date"
+    type: "conditional"
+    severity: "error"
+    condition:
+      field: "status"
+      equals: "completed"
+    requires:
+      field: "completion_date"
+      present: true
+    message: "Completed records must have a completion_date"
+
+  # Custom rules
+  - id: "RULE-011"
+    name: "Email Format"
+    type: "format"
+    severity: "warning"
+    field: "email"
+    pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    message: "Field 'email' should be a valid email format"
+
+  - id: "RULE-012"
+    name: "Future Date Warning"
+    type: "date_check"
+    severity: "warning"
+    field: "date"
+    constraint: "not_future"
+    message: "Field 'date' should not be in the future"
+
+aggregation_rules:
+  - id: "AGG-001"
+    name: "Minimum Records"
+    type: "count"
+    severity: "warning"
+    min_count: 10
+    message: "Dataset should contain at least 10 records"
+
+  - id: "AGG-002"
+    name: "Error Rate Threshold"
+    type: "error_rate"
+    severity: "warning"
+    max_error_rate: 0.05
+    message: "Error rate should not exceed 5%"
+
+output:
+  format: "yaml"
+  include:
+    - "summary"
+    - "errors"
+    - "warnings"
+    - "statistics"
+  file: "validation_report.yaml"

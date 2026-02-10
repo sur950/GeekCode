@@ -1,0 +1,244 @@
+# GeekCode Decision Rules
+# Rule-based decision engine for selecting processing strategy
+# No ML required - pure rule-based logic
+
+version: "1.0"
+
+# Decision rules are evaluated in order; first match wins
+rules:
+  # QMD (Query Markdown) - for simple markdown sources
+  - id: RULE-001
+    name: "Markdown Source"
+    description: "Use QMD for markdown document queries"
+    conditions:
+      - field: source_type
+        operator: in
+        values: ["markdown", "md", "rst", "txt"]
+      - field: complexity
+        operator: lt
+        value: 0.5
+    action:
+      strategy: qmd
+      config:
+        parser: markdown
+        include_code_blocks: true
+
+  # RAG - for document search and retrieval
+  - id: RULE-002
+    name: "Document Retrieval"
+    description: "Use RAG for multi-document search"
+    conditions:
+      - field: task_type
+        operator: eq
+        value: search
+      - field: document_count
+        operator: gt
+        value: 1
+    action:
+      strategy: rag
+      config:
+        top_k: 5
+        min_score: 0.7
+        rerank: true
+
+  - id: RULE-003
+    name: "Large Document"
+    description: "Use RAG for large single documents"
+    conditions:
+      - field: document_size
+        operator: gt
+        value: 50000  # 50KB
+    action:
+      strategy: rag
+      config:
+        chunking: semantic
+        chunk_size: 1000
+        overlap: 200
+
+  # RLM - for complex policy/regulatory documents
+  - id: RULE-004
+    name: "Policy Document"
+    description: "Use RLM for policy interpretation"
+    conditions:
+      - field: document_type
+        operator: in
+        values: ["policy", "regulation", "legal", "contract"]
+    action:
+      strategy: rlm
+      config:
+        build_toc: true
+        detect_overrides: true
+        require_citations: true
+
+  - id: RULE-005
+    name: "High Risk Query"
+    description: "Use RLM for high-risk or compliance queries"
+    conditions:
+      - field: risk_level
+        operator: eq
+        value: high
+    action:
+      strategy: rlm
+      config:
+        confidence_threshold: 0.9
+        require_citations: true
+        human_review: true
+
+  - id: RULE-006
+    name: "Healthcare Document"
+    description: "Use RLM for healthcare/medical documents"
+    conditions:
+      - field: domain
+        operator: eq
+        value: healthcare
+    action:
+      strategy: rlm
+      config:
+        detect_exclusions: true
+        check_parity: true
+        require_citations: true
+
+  - id: RULE-007
+    name: "Finance Document"
+    description: "Use RLM for financial/insurance documents"
+    conditions:
+      - field: domain
+        operator: eq
+        value: finance
+    action:
+      strategy: rlm
+      config:
+        detect_overrides: true
+        track_amendments: true
+        require_citations: true
+
+  # Code analysis
+  - id: RULE-008
+    name: "Code Source"
+    description: "Use code-specific processing"
+    conditions:
+      - field: source_type
+        operator: in
+        values: ["python", "javascript", "typescript", "java", "go", "rust"]
+    action:
+      strategy: code
+      config:
+        chunking: code
+        parse_ast: true
+        include_docstrings: true
+
+  # Default fallback
+  - id: RULE-999
+    name: "Default"
+    description: "Default strategy when no other rules match"
+    conditions:
+      - field: _always
+        operator: eq
+        value: true
+    action:
+      strategy: rag
+      config:
+        chunking: sentence
+        top_k: 5
+
+# Strategy configurations
+strategies:
+  qmd:
+    description: "Query Markdown - simple document queries"
+    supported_formats: [md, markdown, rst, txt]
+    max_document_size: 100000
+    features:
+      - section_extraction
+      - code_block_parsing
+      - link_resolution
+
+  rag:
+    description: "Retrieval-Augmented Generation"
+    supported_formats: [all]
+    features:
+      - semantic_search
+      - multi_document
+      - chunk_scoring
+    default_config:
+      embedding_model: "all-MiniLM-L6-v2"
+      vector_db: chromadb
+      top_k: 5
+
+  rlm:
+    description: "Recursive Language Model - complex document analysis"
+    supported_formats: [pdf, docx, html, md]
+    features:
+      - semantic_toc
+      - section_navigation
+      - override_detection
+      - negation_detection
+      - citation_generation
+    default_config:
+      confidence_threshold: 0.8
+      require_citations: true
+
+  code:
+    description: "Code-specific processing"
+    supported_formats: [py, js, ts, java, go, rs, cpp, c]
+    features:
+      - ast_parsing
+      - function_extraction
+      - dependency_analysis
+      - docstring_extraction
+
+# Complexity scoring factors
+complexity_factors:
+  document_size:
+    weight: 0.3
+    thresholds:
+      low: 10000    # < 10KB
+      medium: 50000  # 10-50KB
+      high: 100000   # > 100KB
+
+  section_count:
+    weight: 0.2
+    thresholds:
+      low: 5
+      medium: 20
+      high: 50
+
+  cross_references:
+    weight: 0.3
+    description: "Number of internal references/links"
+    thresholds:
+      low: 3
+      medium: 10
+      high: 25
+
+  legal_language:
+    weight: 0.2
+    description: "Presence of legal/regulatory language"
+    indicators:
+      - "notwithstanding"
+      - "pursuant to"
+      - "hereinafter"
+      - "shall not"
+      - "subject to"
+
+# Risk level determination
+risk_levels:
+  high:
+    domains: [healthcare, finance, legal, compliance]
+    keywords:
+      - "liability"
+      - "coverage"
+      - "exclusion"
+      - "termination"
+      - "penalty"
+    requires:
+      - citations
+      - human_review
+
+  medium:
+    domains: [hr, operations]
+    requires:
+      - citations
+
+  low:
+    domains: [general, marketing, documentation]
+    requires: []

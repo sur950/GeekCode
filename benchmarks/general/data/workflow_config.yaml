@@ -1,0 +1,117 @@
+# Workflow configuration for Task 3: Long-Running Workflow
+
+workflow:
+  id: "WF-BENCHMARK-001"
+  name: "Data Processing Pipeline"
+  version: "1.0"
+  description: "Multi-phase data processing workflow for benchmark testing"
+
+phases:
+  - name: "data_collection"
+    order: 1
+    description: "Collect and inventory all input files"
+    inputs:
+      - source: "workflow_input/"
+        patterns:
+          - "*.csv"
+          - "*.json"
+          - "*.xml"
+    outputs:
+      - "collected_files.yaml"
+    timeout_seconds: 60
+    retry_count: 3
+
+  - name: "validation"
+    order: 2
+    description: "Validate data quality against rules"
+    inputs:
+      - "collected_files.yaml"
+      - "validation_rules.yaml"
+    outputs:
+      - "validation_report.yaml"
+    timeout_seconds: 120
+    on_warning: "continue"
+    on_error: "stop"
+
+  - name: "transformation"
+    order: 3
+    description: "Normalize, enrich, and deduplicate data"
+    inputs:
+      - "validation_report.yaml"
+    operations:
+      - type: "normalize"
+        target_schema: "standard_schema.yaml"
+      - type: "enrich"
+        enrichment_sources:
+          - "reference_data.csv"
+      - type: "deduplicate"
+        key_fields: ["id", "name"]
+    outputs:
+      - "transformed_data.json"
+    timeout_seconds: 180
+
+  - name: "analysis"
+    order: 4
+    description: "Compute statistics and identify patterns"
+    inputs:
+      - "transformed_data.json"
+    analyses:
+      - type: "descriptive_stats"
+        fields: ["amount", "quantity", "date"]
+      - type: "pattern_detection"
+        algorithms: ["frequency", "anomaly"]
+      - type: "correlation"
+        field_pairs:
+          - ["amount", "quantity"]
+          - ["category", "amount"]
+    outputs:
+      - "analysis_results.yaml"
+    timeout_seconds: 240
+
+  - name: "report_generation"
+    order: 5
+    description: "Generate final output report"
+    inputs:
+      - "analysis_results.yaml"
+      - "validation_report.yaml"
+    template: "report_template.md"
+    outputs:
+      - "final_report.md"
+      - "summary.json"
+    timeout_seconds: 60
+
+checkpointing:
+  enabled: true
+  frequency: "after_each_phase"
+  format: "yaml"
+  location: ".geekcode/checkpoints/"
+  retention_count: 5
+
+error_handling:
+  default_action: "stop"
+  retry_delay_seconds: 5
+  max_retries: 3
+  notification:
+    on_failure: true
+    on_completion: true
+
+resume:
+  enabled: true
+  strategy: "from_last_checkpoint"
+  skip_completed: true
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+  file: "workflow.log"
+  console: true
+
+audit:
+  enabled: true
+  track_events:
+    - "phase_start"
+    - "phase_complete"
+    - "phase_error"
+    - "checkpoint_created"
+    - "resume_initiated"
+  output: "audit_trail.yaml"

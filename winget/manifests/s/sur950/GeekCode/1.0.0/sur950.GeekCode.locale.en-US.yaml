@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: sur950.GeekCode
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: sur950
+PublisherUrl: https://github.com/sur950
+PublisherSupportUrl: https://github.com/sur950/GeekCode/issues
+PackageName: GeekCode
+PackageUrl: https://github.com/sur950/GeekCode
+License: Apache-2.0
+LicenseUrl: https://github.com/sur950/GeekCode/blob/main/LICENSE
+ShortDescription: Filesystem-driven AI agent for knowledge work across Coding, Finance, Healthcare, and Research domains
+Description: |-
+  GeekCode is an interactive AI agent that runs in your terminal. Unlike other CLI agents,
+  it stores all state on the filesystem (not in memory), enabling true session resumption,
+  mid-task model switching, token caching, and crash recovery. It works across Coding,
+  Finance, Healthcare, and General/Research domains with domain-specific model selection.
+Tags:
+  - ai
+  - agent
+  - cli
+  - llm
+  - coding-assistant
+  - automation
+  - resumable
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

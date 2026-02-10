@@ -1,0 +1,129 @@
+# GeekCode Benchmark Metrics Framework
+# Defines measurement criteria for comparing agents across all domains
+
+version: "1.0"
+
+metrics:
+  accuracy:
+    description: "Correctness of the agent's output against expected results"
+    type: float
+    range: [0.0, 1.0]
+    evaluation_method: manual_rubric
+    rubric:
+      1.0: "Perfect match with expected output"
+      0.8: "Minor deviations, correct overall approach"
+      0.6: "Partial correctness, some errors"
+      0.4: "Major issues, partially usable"
+      0.2: "Mostly incorrect, few correct elements"
+      0.0: "Completely wrong or no output"
+
+  latency:
+    description: "Total time to complete the task"
+    type: float
+    unit: seconds
+    measurement:
+      start: "First user input"
+      end: "Final output delivered"
+
+  token_usage:
+    description: "Total tokens consumed (input + output)"
+    type: integer
+    breakdown:
+      - input_tokens
+      - output_tokens
+      - total_tokens
+
+  resume_success:
+    description: "Whether the agent successfully resumes after interruption"
+    type: boolean
+    test_method: "Kill process at 50% completion, restart, verify continuation"
+
+  model_switch_success:
+    description: "Whether the agent handles mid-task model switching"
+    type: boolean
+    test_method: "Switch model at checkpoint, verify state preservation"
+
+  context_retention:
+    description: "How well the agent maintains context across long tasks"
+    type: float
+    range: [0.0, 1.0]
+    evaluation_method: manual_assessment
+
+  citation_accuracy:
+    description: "Correctness of source citations (for RAG/RLM tasks)"
+    type: float
+    range: [0.0, 1.0]
+    applicable_domains: [finance, healthcare]
+
+agents:
+  - name: geekcode
+    description: "GeekCode - Filesystem-driven resumable agent"
+    model: "multi-model (claude-sonnet-4-5, gpt-4o, gemini-2.0-flash)"
+    domains: [coding, finance, healthcare, general]
+  - name: claude_code
+    description: "Anthropic Claude Code CLI"
+    model: "claude-opus-4-6"
+    domains: [coding]
+  - name: codex_cli
+    description: "OpenAI Codex CLI - sandbox execution with test verification"
+    model: "o3-mini"
+    domains: [coding]
+  - name: aider
+    description: "Aider - AI pair programming CLI"
+    model: "gpt-4o"
+    domains: [coding]
+  - name: chatgpt_cli
+    description: "ChatGPT CLI (shell-gpt/aichat) - strong reasoning via GPT-4o"
+    model: "gpt-4o"
+    domains: [finance, healthcare, general]
+  - name: perplexity
+    description: "Perplexity CLI - Research-focused agent"
+    model: "pplx-api"
+    domains: [finance, healthcare, general]
+  - name: gemini_cli
+    description: "Google Gemini CLI"
+    model: "gemini-2.0-flash"
+    domains: [finance, healthcare, general]
+
+domains:
+  - coding
+  - finance
+  - healthcare
+  - general  # General/Research
+
+test_scenarios:
+  baseline:
+    description: "Normal execution without interruption"
+    metrics: [accuracy, latency, token_usage]
+
+  resume_test:
+    description: "Process killed at 50%, then resumed"
+    metrics: [resume_success, accuracy, latency]
+
+  model_switch_30:
+    description: "Model switched at 30% completion"
+    metrics: [model_switch_success, accuracy]
+
+  model_switch_70:
+    description: "Model switched at 70% completion"
+    metrics: [model_switch_success, accuracy]
+
+  failure_injection:
+    description: "Simulated failures during execution"
+    failure_types:
+      - network_timeout
+      - api_error
+      - disk_full
+    metrics: [resume_success, accuracy]
+
+output_format:
+  file: "results/{agent}/{domain}/{scenario}.yaml"
+  fields:
+    - timestamp
+    - agent_name
+    - agent_version
+    - domain
+    - task_id
+    - scenario
+    - metrics
+    - notes

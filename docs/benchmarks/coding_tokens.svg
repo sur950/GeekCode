@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 260" width="500" height="260" style="font-family:system-ui,sans-serif;background:#fff">
+<text x="250.0" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">Coding — Avg Tokens/Task</text>
+<text x="112" y="73" text-anchor="end" font-size="12" fill="#475569">Aider</text>
+<rect x="120" y="53.5" width="293.2" height="31.7" rx="4" fill="#DC2626"/>
+<text x="419" y="73" font-size="12" font-weight="bold" fill="#DC2626">3,138</text>
+<text x="112" y="122" text-anchor="end" font-size="12" fill="#475569">Claude Code</text>
+<rect x="120" y="102.3" width="320.0" height="31.7" rx="4" fill="#D97706"/>
+<text x="446" y="122" font-size="12" font-weight="bold" fill="#D97706">3,425</text>
+<text x="112" y="171" text-anchor="end" font-size="12" fill="#475569">Codex CLI</text>
+<rect x="120" y="151.0" width="288.4" height="31.7" rx="4" fill="#0EA5E9"/>
+<text x="414" y="171" font-size="12" font-weight="bold" fill="#0EA5E9">3,087</text>
+<text x="112" y="220" text-anchor="end" font-size="12" fill="#475569">GeekCode</text>
+<rect x="120" y="199.8" width="210.7" height="31.7" rx="4" fill="#6C63FF"/>
+<text x="337" y="220" font-size="12" font-weight="bold" fill="#6C63FF">2,255</text>
+</svg>
