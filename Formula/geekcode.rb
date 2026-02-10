@@ -3,30 +3,19 @@ class Geekcode < Formula
 
   desc "Filesystem-driven AI agent for knowledge work"
   homepage "https://github.com/sur950/GeekCode"
-  url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
-  sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
+  url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.2.tar.gz"
+  sha256 "REPLACE_WITH_SHA256_OF_RELEASE_TARBALL"
   license "Apache-2.0"
   head "https://github.com/sur950/GeekCode.git", branch: "main"
 
   depends_on "python@3.12"
 
-  resource "click" do
-    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
-    sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
-  end
-
-  resource "pyyaml" do
-    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
-    sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
-  end
-
-  resource "rich" do
-    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
-    sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
-  end
-
   def install
-    virtualenv_install_with_resources
+    venv = virtualenv_create(libexec, "python3.12")
+    # Use pip with full dependency resolution (not --no-deps)
+    system Formula["python@3.12"].opt_bin/"python3.12", "-m", "pip",
+           "--python=#{libexec}/bin/python", "install", "--no-cache-dir", buildpath
+    bin.install_symlink libexec/"bin/geekcode"
   end
 
   def caveats
@@ -37,10 +26,13 @@ class Geekcode < Formula
       API keys are loaded from environment variables:
         export ANTHROPIC_API_KEY="sk-ant-..."
         export OPENAI_API_KEY="sk-..."
+
+      Free to start — no API key needed with Ollama (local), or get a free key at:
+        https://openrouter.ai/settings/keys
     EOS
   end
 
   test do
-    assert_match "geekcode", shell_output("#{bin}/geekcode --help 2>&1", 0)
+    assert_match "GeekCode", shell_output("#{bin}/geekcode --version 2>&1", 0)
   end
 end

@@ -145,9 +145,9 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           SHA=$(curl -sL "https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz" | sha256sum | cut -d' ' -f1)
 
-          # Update formula in main repo
-          sed -i "s|url \".*\"|url \"https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz\"|" Formula/geekcode.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${SHA}\"|" Formula/geekcode.rb
+          # Update formula in main repo (only the top-level url + sha256)
+          sed -i "0,/url \".*\"/{s|url \".*\"|url \"https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz\"|}" Formula/geekcode.rb
+          sed -i "0,/sha256 \".*\"/{s|sha256 \".*\"|sha256 \"${SHA}\"|}" Formula/geekcode.rb
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

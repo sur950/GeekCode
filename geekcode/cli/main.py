@@ -229,8 +229,24 @@ class GeekCodeREPL:
         self._input_count = 0
         self._init_readline()
 
+    # All slash commands for tab-completion
+    SLASH_COMMANDS = [
+        "/help", "/?",
+        "/status",
+        "/history",
+        "/models",
+        "/model ",
+        "/tools", "/tools refresh", "/tools info ",
+        "/benchmark run", "/benchmark run ", "/benchmark report",
+        "/loop", "/loop resume", "/loop reset",
+        "/newchat",
+        "/clear",
+        "/reset",
+        "/exit", "/quit", "/q",
+    ]
+
     def _init_readline(self):
-        """Initialize readline for arrow-key history."""
+        """Initialize readline for arrow-key history and slash-command completion."""
         try:
             import readline
         except ImportError:
@@ -247,6 +263,18 @@ class GeekCodeREPL:
                 readline.read_history_file(str(self._history_file))
             except (OSError, IOError):
                 pass
+
+        # Set up tab-completion for slash commands
+        def completer(text, state):
+            if text.startswith("/"):
+                matches = [c for c in self.SLASH_COMMANDS if c.startswith(text)]
+            else:
+                matches = []
+            return matches[state] if state < len(matches) else None
+
+        readline.set_completer(completer)
+        readline.set_completer_delims("")
+        readline.parse_and_bind("tab: complete")
 
     def _save_history(self):
         """Persist readline history to disk."""
@@ -594,7 +622,15 @@ class GeekCodeREPL:
 
         else:
             console.print(f"[yellow]Unknown command: {command}[/yellow]")
-            console.print("[dim]Type /help for available commands[/dim]")
+            # Suggest closest match
+            known = ["/help", "/status", "/history", "/models", "/model",
+                     "/tools", "/benchmark", "/loop", "/newchat", "/clear",
+                     "/reset", "/exit", "/quit"]
+            close = [c for c in known if c.startswith(command[:3])]
+            if close:
+                console.print(f"[dim]Did you mean: {', '.join(close)}?[/dim]")
+            else:
+                console.print("[dim]Type /help for available commands[/dim]")
 
         return True
 
