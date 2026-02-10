@@ -84,7 +84,8 @@ jobs:
 
           # Source tarball
           tar -czf release-assets/geekcode-${{ steps.version.outputs.VERSION }}.tar.gz \
-            --exclude='.git' --exclude='dist' --exclude='build' --exclude='*.egg-info' .
+            --exclude='.git' --exclude='dist' --exclude='build' --exclude='*.egg-info' \
+            --exclude='release-assets' --exclude='artifacts' .
 
           # Generate SHA256 checksums
           cd release-assets
