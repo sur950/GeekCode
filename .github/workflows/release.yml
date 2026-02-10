@@ -92,40 +92,40 @@ jobs:
           sha256sum * > checksums-sha256.txt
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: GeekCode v${{ steps.version.outputs.VERSION }}
-          body: |
-            ## GeekCode v${{ steps.version.outputs.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "GeekCode v${{ steps.version.outputs.VERSION }}" \
+            --notes "## GeekCode v${{ steps.version.outputs.VERSION }}
 
-            ### Installation
+          ### Installation
 
-            **macOS (Homebrew):**
-            ```bash
-            brew install sur950/geekcode/geekcode
-            ```
+          **macOS (Homebrew):**
+          \`\`\`bash
+          brew install sur950/geekcode/geekcode
+          \`\`\`
 
-            **macOS (direct download — Apple Silicon):**
-            ```bash
-            curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
-            ```
+          **macOS (direct download — Apple Silicon):**
+          \`\`\`bash
+          curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+          \`\`\`
 
-            **Linux:**
-            ```bash
-            curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-linux-x64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
-            ```
+          **Linux:**
+          \`\`\`bash
+          curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-linux-x64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+          \`\`\`
 
-            **Windows (Winget):**
-            ```powershell
-            winget install sur950.GeekCode
-            ```
+          **Windows (Winget):**
+          \`\`\`powershell
+          winget install sur950.GeekCode
+          \`\`\`
 
-            **pip:**
-            ```bash
-            pip install geekcode
-            ```
-          files: release-assets/*
-          generate_release_notes: true
+          **pip:**
+          \`\`\`bash
+          pip install geekcode
+          \`\`\`" \
+            release-assets/*
 
   update-homebrew:
     needs: release
@@ -134,22 +134,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
-      - name: Get version and SHA256
-        id: info
+      - name: Update formula with release SHA256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
           SHA=$(curl -sL "https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz" | sha256sum | cut -d' ' -f1)
-          echo "SHA256=$SHA" >> "$GITHUB_OUTPUT"
 
-      - name: Update formula
-        run: |
           sed -i "s|url \".*\"|url \"https://github.com/sur950/GeekCode/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz\"|" Formula/geekcode.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.info.outputs.SHA256 }}\"|" Formula/geekcode.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${SHA}\"|" Formula/geekcode.rb
 
-      - name: Push updated formula
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "formula: update to v${{ steps.info.outputs.VERSION }}"
-          file_pattern: "Formula/geekcode.rb"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/geekcode.rb
+          git diff --cached --quiet || git commit -m "formula: update to v${VERSION}"
+          git push origin main
