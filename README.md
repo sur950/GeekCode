@@ -88,15 +88,10 @@ Type your task, or /help for commands
 brew install sur950/geekcode/geekcode
 ```
 
-### macOS (Direct Binary)
+### macOS (Direct Binary — Apple Silicon)
 
 ```bash
-# Apple Silicon (M1/M2/M3/M4)
 curl -fsSL https://github.com/sur950/GeekCode/releases/latest/download/geekcode-macos-arm64 -o /usr/local/bin/geekcode
-chmod +x /usr/local/bin/geekcode
-
-# Intel Mac
-curl -fsSL https://github.com/sur950/GeekCode/releases/latest/download/geekcode-macos-x64 -o /usr/local/bin/geekcode
 chmod +x /usr/local/bin/geekcode
 ```
 
