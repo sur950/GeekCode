@@ -17,56 +17,25 @@ class TestConfig:
         with tempfile.TemporaryDirectory() as tmpdir:
             yield Path(tmpdir)
 
-    def test_deep_merge(self):
-        """Test deep merging of dictionaries."""
-        config = Config()
-
-        base = {
-            "a": 1,
-            "b": {"c": 2, "d": 3},
-            "e": [1, 2, 3],
-        }
-
-        override = {
-            "b": {"c": 10, "f": 5},
-            "g": "new",
-        }
-
-        result = config._deep_merge(base, override)
-
-        assert result["a"] == 1
-        assert result["b"]["c"] == 10
-        assert result["b"]["d"] == 3
-        assert result["b"]["f"] == 5
-        assert result["e"] == [1, 2, 3]
-        assert result["g"] == "new"
-
     def test_get_merged_config(self):
-        """Test getting merged configuration."""
-        global_config = {
+        """Test getting configuration (local-only, no global)."""
+        local_config = {
+            "agent": {"model": "claude-3"},
             "providers": {
                 "openai": {"enabled": True, "models": ["gpt-4"]},
             },
-            "agent": {"model": "gpt-4"},
         }
 
-        local_config = {
-            "agent": {"model": "claude-3"},
-        }
-
-        config = Config(global_config=global_config, local_config=local_config)
+        config = Config(local_config=local_config)
         merged = config.get_merged_config()
 
-        # Local should override global
         assert merged["agent"]["model"] == "claude-3"
-        # Global should be preserved
         assert merged["providers"]["openai"]["enabled"] is True
 
     def test_get_default_model_from_agent(self):
         """Test getting default model from agent config."""
         config = Config(
-            global_config={"agent": {"model": "gpt-4-turbo"}},
-            local_config={},
+            local_config={"agent": {"model": "gpt-4-turbo"}},
         )
 
         assert config.get_default_model() == "gpt-4-turbo"
@@ -74,7 +43,7 @@ class TestConfig:
     def test_get_available_models(self):
         """Test getting available models."""
         config = Config(
-            global_config={
+            local_config={
                 "providers": {
                     "openai": {
                         "enabled": True,
@@ -87,7 +56,6 @@ class TestConfig:
                     },
                 }
             },
-            local_config={},
         )
 
         models = config.get_available_models()
@@ -101,13 +69,14 @@ class TestConfig:
 
     def test_set_model(self):
         """Test setting the model."""
-        config = Config(global_config={}, local_config={})
+        config = Config(local_config={})
 
-        config.set_model("gpt-4", global_=False)
+        config.set_model("gpt-4")
         assert config._local_config["agent"]["model"] == "gpt-4"
 
-        config.set_model("claude-3", global_=True)
-        assert config._global_config["agent"]["model"] == "claude-3"
+    def test_no_global_config_dir(self):
+        """Test that there is no global config directory attribute."""
+        assert not hasattr(Config, "GLOBAL_CONFIG_DIR")
 
 
 class TestGeekCodeConfig:

@@ -90,7 +90,6 @@ class StateEngine:
 
     State files are stored in:
     - Local: .geekcode/state/
-    - Global: ~/.geekcode/state/
 
     Example:
         >>> engine = StateEngine()
@@ -109,14 +108,8 @@ class StateEngine:
         if state_dir:
             self.state_dir = Path(state_dir)
         else:
-            # Try local first, then global
-            local_dir = Path.cwd() / ".geekcode" / "state"
-            global_dir = Path.home() / ".geekcode" / "state"
-
-            if local_dir.exists() or (Path.cwd() / ".geekcode").exists():
-                self.state_dir = local_dir
-            else:
-                self.state_dir = global_dir
+            # Use project-local .geekcode/state/ only
+            self.state_dir = Path.cwd() / ".geekcode" / "state"
 
         self.state_dir.mkdir(parents=True, exist_ok=True)
 

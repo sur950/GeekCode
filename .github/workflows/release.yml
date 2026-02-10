@@ -42,7 +42,7 @@ jobs:
 
       - name: Build binary with PyInstaller
         shell: bash
-        run: pyinstaller --onefile --name ${{ matrix.binary_name }} --collect-all geekcode --exclude-module torch --exclude-module transformers --exclude-module scipy --exclude-module sklearn --exclude-module numpy --exclude-module chromadb --exclude-module sentence_transformers --exclude-module nvidia --exclude-module triton --exclude-module onnxruntime --exclude-module tensorflow --exclude-module tensorboard geekcode/cli/main.py
+        run: pyinstaller --onefile --name ${{ matrix.binary_name }} --collect-all geekcode --hidden-import anthropic --hidden-import openai --hidden-import google.generativeai --hidden-import httpx --hidden-import tiktoken --hidden-import tiktoken_ext.openai_public --hidden-import tiktoken_ext --exclude-module torch --exclude-module transformers --exclude-module scipy --exclude-module sklearn --exclude-module numpy --exclude-module chromadb --exclude-module sentence_transformers --exclude-module nvidia --exclude-module triton --exclude-module onnxruntime --exclude-module tensorflow --exclude-module tensorboard geekcode/cli/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

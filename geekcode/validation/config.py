@@ -2,8 +2,8 @@
 GeekCode Configuration - Configuration loading and validation.
 
 This module provides the Config class for managing GeekCode configuration
-from both global (~/.geekcode/config.yaml) and local (.geekcode/config.yaml)
-sources.
+from local (.geekcode/config.yaml) project-level sources only.
+There is no global config — all preferences are per-project.
 """
 
 import os
@@ -91,50 +91,44 @@ class Config:
     """
     GeekCode configuration manager.
 
-    Handles loading, merging, and validating configuration from:
-    - Global: ~/.geekcode/config.yaml
-    - Local: .geekcode/config.yaml (project-specific)
+    Handles loading and validating configuration from:
+    - Local: .geekcode/config.yaml (project-specific only)
 
-    Local configuration overrides global configuration.
+    There is no global config. API keys come from environment variables.
 
     Example:
         >>> config = Config.load()
         >>> model = config.get_default_model()
-        >>> config.set_model("gpt-4", global_=True)
+        >>> config.set_model("gpt-4")
         >>> config.save()
     """
 
-    GLOBAL_CONFIG_DIR = Path.home() / ".geekcode"
     LOCAL_CONFIG_DIR = Path(".geekcode")
 
     def __init__(
         self,
-        global_config: Optional[Dict[str, Any]] = None,
         local_config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize Config.
 
         Args:
-            global_config: Global configuration dictionary.
             local_config: Local (project) configuration dictionary.
         """
-        self._global_config = global_config or {}
         self._local_config = local_config or {}
         self._merged: Optional[GeekCodeConfig] = None
 
     @classmethod
     def load(cls) -> "Config":
         """
-        Load configuration from default locations.
+        Load configuration from project-local .geekcode/config.yaml only.
 
         Returns:
             Config instance with loaded configuration.
         """
-        global_config = cls._load_yaml(cls.GLOBAL_CONFIG_DIR / "config.yaml")
         local_config = cls._load_yaml(cls._find_local_config())
 
-        return cls(global_config=global_config, local_config=local_config)
+        return cls(local_config=local_config)
 
     @classmethod
     def _load_yaml(cls, path: Optional[Path]) -> Dict[str, Any]:
@@ -161,13 +155,8 @@ class Config:
         return None
 
     def get_merged_config(self) -> Dict[str, Any]:
-        """Get the merged configuration as a dictionary."""
-        merged = self._deep_merge(self._global_config.copy(), self._local_config)
-        return merged
-
-    def get_global_config(self) -> Dict[str, Any]:
-        """Get the global configuration."""
-        return self._global_config
+        """Get the configuration as a dictionary."""
+        return self._local_config.copy()
 
     def get_local_config(self) -> Dict[str, Any]:
         """Get the local configuration."""
@@ -211,20 +200,17 @@ class Config:
 
         return models
 
-    def set_model(self, model_name: str, global_: bool = False) -> None:
+    def set_model(self, model_name: str) -> None:
         """
         Set the default model.
 
         Args:
             model_name: The model to set as default.
-            global_: Whether to set globally or locally.
         """
-        config = self._global_config if global_ else self._local_config
+        if "agent" not in self._local_config:
+            self._local_config["agent"] = {}
 
-        if "agent" not in config:
-            config["agent"] = {}
-
-        config["agent"]["model"] = model_name
+        self._local_config["agent"]["model"] = model_name
         self._merged = None  # Reset cache
 
     def get_provider_config(self, provider_name: str) -> Optional[ProviderConfig]:
@@ -255,9 +241,7 @@ class Config:
         return None
 
     def save(self) -> None:
-        """Save configuration to files."""
-        self._save_yaml(self.GLOBAL_CONFIG_DIR / "config.yaml", self._global_config)
-
+        """Save configuration to local project config file."""
         local_path = self._find_local_config()
         if local_path:
             self._save_yaml(local_path, self._local_config)
@@ -269,66 +253,3 @@ class Config:
         with open(path, "w") as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-        """Deep merge two dictionaries, with override taking precedence."""
-        result = base.copy()
-
-        for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = self._deep_merge(result[key], value)
-            else:
-                result[key] = value
-
-        return result
-
-    @classmethod
-    def create_default_global(cls) -> Path:
-        """Create default global configuration file."""
-        config_dir = cls.GLOBAL_CONFIG_DIR
-        config_file = config_dir / "config.yaml"
-
-        if config_file.exists():
-            return config_file
-
-        config_dir.mkdir(parents=True, exist_ok=True)
-
-        default_config = {
-            "providers": {
-                "openai": {
-                    "api_key": None,  # Set via OPENAI_API_KEY env var
-                    "models": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
-                    "default_model": "gpt-4",
-                    "enabled": True,
-                },
-                "anthropic": {
-                    "api_key": None,  # Set via ANTHROPIC_API_KEY env var
-                    "models": ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
-                    "default_model": "claude-3-sonnet",
-                    "enabled": True,
-                },
-                "google": {
-                    "api_key": None,  # Set via GOOGLE_API_KEY env var
-                    "models": ["gemini-pro", "gemini-pro-vision"],
-                    "default_model": "gemini-pro",
-                    "enabled": True,
-                },
-                "ollama": {
-                    "api_base": "http://localhost:11434",
-                    "models": ["llama2", "codellama", "mistral"],
-                    "default_model": "llama2",
-                    "enabled": False,
-                },
-            },
-            "agent": {
-                "model": None,  # Uses provider default
-                "max_tokens": 4096,
-                "temperature": 0.7,
-                "timeout": 120,
-                "retry_count": 3,
-            },
-        }
-
-        with open(config_file, "w") as f:
-            yaml.dump(default_config, f, default_flow_style=False, sort_keys=False)
-
-        return config_file

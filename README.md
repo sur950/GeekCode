@@ -30,7 +30,7 @@ geekcode
 That's it. GeekCode opens an interactive prompt:
 
 ```
-GeekCode v1.0.0
+GeekCode v1.0.1
 Workspace: /Users/you/your-project
 Type your task, or /help for commands
 
@@ -51,7 +51,7 @@ Type your task, or /help for commands
 ┌────────────────────────────────────────────────────┐
 │  $ geekcode                                        │
 │                                                    │
-│  GeekCode v1.0.0                                   │
+│  GeekCode v1.0.1                                   │
 │  Workspace: ~/my-project                           │
 │                                                    │
 │  > Analyze the insurance policy                    │
@@ -206,7 +206,8 @@ Runs one task and exits.
 
 When you run `geekcode` in a new project, it asks a few questions:
 
-1. **Which LLM?** — Pick from Claude, GPT-4o, Gemini, Groq, Ollama, or enter any model name
+1. **Which LLM?** — Picks Ollama automatically if running locally, otherwise recommends
+   OpenRouter (free), Groq (free tier), or any of Claude, GPT-4o, Gemini, Together
 2. **Auto-resume?** — Whether to resume previous sessions automatically
 3. **API key check** — Verifies the required environment variable is set
 
@@ -227,6 +228,10 @@ export OPENROUTER_API_KEY="sk-or-..."
 export TOGETHER_API_KEY="..."
 export GROQ_API_KEY="gsk_..."
 ```
+
+> **Free to start**: Sign up and get a free API key at
+> [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
+> — access 100+ models including DeepSeek, Llama, Mistral, and more.
 
 Switch models inside the chat:
 
@@ -257,6 +262,13 @@ cache:
   enabled: true
   ttl_hours: 24
 ```
+
+### Team Usage & `.geekcode/`
+
+- **Commit `.geekcode/` to git** — team members can resume sessions and share context
+- **Don't edit files inside `.geekcode/` manually** — GeekCode manages them automatically
+- **Rate limits**: Groq free tier allows ~30 requests/min. OpenRouter free models have
+  varying limits — check [openrouter.ai/models](https://openrouter.ai/models) for details
 
 ## Domains
 

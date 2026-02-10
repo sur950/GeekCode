@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geekcode"
-version = "1.0.0"
+version = "1.0.1"
 description = "A resumable, filesystem-driven AI agent for knowledge work across Coding, Finance, Healthcare, and Research domains"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -48,6 +48,7 @@ dependencies = [
     "httpx>=0.24.0",
     "python-dotenv>=1.0.0",
     "tiktoken>=0.5.0",
+    "pyreadline3>=3.4.0; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]

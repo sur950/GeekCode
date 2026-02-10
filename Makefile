@@ -17,6 +17,12 @@ build:
 	pyinstaller --onefile \
 		--name geekcode \
 		--add-data "geekcode:geekcode" \
+		--collect-all geekcode \
+		--hidden-import=anthropic \
+		--hidden-import=openai \
+		--hidden-import=google.generativeai \
+		--hidden-import=httpx \
+		--hidden-import=tiktoken \
 		--hidden-import=tiktoken_ext.openai_public \
 		--hidden-import=tiktoken_ext \
 		geekcode/cli/main.py

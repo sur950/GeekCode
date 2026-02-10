@@ -170,6 +170,13 @@ class Agent:
                 completed=True,
             )
 
+        except KeyboardInterrupt:
+            # === INTERRUPTED: Save paused state and re-raise ===
+            state["status"] = "paused"
+            state["paused_at"] = datetime.utcnow().isoformat()
+            self._write_state(state)
+            raise
+
         except Exception as e:
             # === ERROR: Write error state to file ===
             state["status"] = "error"
@@ -455,10 +462,10 @@ class Agent:
         return result
 
     def _create_provider(self, config: Dict[str, Any]):
-        """Create provider (stateless - uses config)."""
+        """Create provider (stateless - uses config). Falls back to other providers on ImportError."""
         from geekcode.providers.base import ProviderFactory
 
-        model = config.get("model", "claude-3-sonnet")
+        model = config.get("model", "claude-sonnet-4-5")
 
         class ConfigWrapper:
             def __init__(self, cfg):
@@ -490,7 +497,32 @@ class Agent:
                     temperature = 0.7
                 return AgentConfig()
 
-        return ProviderFactory.create(model, ConfigWrapper(config))
+        wrapper = ConfigWrapper(config)
+
+        # Try the configured model first, fall back to others on ImportError
+        try:
+            return ProviderFactory.create(model, wrapper)
+        except ImportError:
+            # Provider package missing — try other providers that have API keys set
+            fallback_models = [
+                ("ANTHROPIC_API_KEY", "claude-sonnet-4-5"),
+                ("OPENAI_API_KEY", "gpt-4o"),
+                ("GOOGLE_API_KEY", "gemini-2.0-flash"),
+            ]
+            for env_var, fallback_model in fallback_models:
+                if fallback_model == model:
+                    continue  # Already failed
+                if os.environ.get(env_var):
+                    try:
+                        return ProviderFactory.create(fallback_model, wrapper)
+                    except ImportError:
+                        continue
+            # Nothing worked — raise original error with helpful message
+            raise ImportError(
+                f"Could not load provider for '{model}'. "
+                f"If using the binary, please report this issue. "
+                f"If using pip, install with: pip install geekcode[openai,anthropic,google]"
+            )
 
     def clear_conversation(self) -> None:
         """Clear conversation file."""

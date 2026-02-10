@@ -7,7 +7,6 @@ All state managed in .geekcode/ files.
 
 import os
 import sys
-import signal
 from pathlib import Path
 from typing import Optional
 
@@ -35,12 +34,24 @@ def find_workspace() -> Path:
     return Path.cwd()
 
 
+def _detect_ollama() -> bool:
+    """Check if Ollama is running locally."""
+    try:
+        import httpx
+        r = httpx.get("http://localhost:11434/api/tags", timeout=2)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
 MODEL_CHOICES = [
+    ("ollama/llama3", "Ollama (local, no API key)", None),
+    ("openrouter/deepseek/deepseek-r1", "OpenRouter (100+ models, free API key)", "OPENROUTER_API_KEY"),
+    ("groq/llama-3.3-70b-versatile", "Groq (fast, free tier)", "GROQ_API_KEY"),
     ("claude-sonnet-4-5", "Anthropic", "ANTHROPIC_API_KEY"),
     ("gpt-4o", "OpenAI", "OPENAI_API_KEY"),
     ("gemini-2.0-flash", "Google", "GOOGLE_API_KEY"),
-    ("groq/llama-3.3-70b-versatile", "Groq (fast, free tier)", "GROQ_API_KEY"),
-    ("ollama/llama3", "Ollama (local, no API key)", None),
+    ("together/mixtral-8x7b", "Together AI", "TOGETHER_API_KEY"),
 ]
 
 
@@ -50,11 +61,41 @@ def _run_first_time_setup(workspace: Path) -> dict:
     console.print("[bold blue]Welcome to GeekCode![/bold blue]")
     console.print(f"[dim]Setting up project: {workspace.name}[/dim]\n")
 
-    # 1. Model selection
+    # 1. Model selection — auto-detect Ollama
+    ollama_running = _detect_ollama()
+
     console.print("[bold]Which LLM would you like to use?[/bold]")
-    for i, (model, label, _) in enumerate(MODEL_CHOICES, 1):
-        console.print(f"  [cyan][{i}][/cyan] {model} ({label})")
-    console.print(f"  [cyan][{len(MODEL_CHOICES) + 1}][/cyan] Other (enter model name)")
+
+    if ollama_running:
+        # Ollama detected — show it first as recommended
+        display_choices = list(MODEL_CHOICES)  # already has ollama first
+        for i, (model_name, label, _) in enumerate(display_choices, 1):
+            suffix = ""
+            if "ollama" in model_name:
+                suffix = " [green]<- recommended (detected, local)[/green]"
+            console.print(f"  [cyan][{i}][/cyan] {model_name} ({label}){suffix}")
+    else:
+        # Ollama not running — reorder: OpenRouter first, Ollama gets "(not running)" note
+        display_choices = []
+        for m, l, k in MODEL_CHOICES:
+            if "ollama" in m:
+                display_choices.append((m, l + " (not running)", k))
+            else:
+                display_choices.append((m, l, k))
+        # Move OpenRouter to position 0 (swap with ollama)
+        ollama_idx = next((i for i, (m, _, _) in enumerate(display_choices) if "ollama" in m), 0)
+        or_idx = next((i for i, (m, _, _) in enumerate(display_choices) if "openrouter" in m), 1)
+        display_choices[ollama_idx], display_choices[or_idx] = display_choices[or_idx], display_choices[ollama_idx]
+
+        for i, (model_name, label, _) in enumerate(display_choices, 1):
+            suffix = ""
+            if "openrouter" in model_name:
+                suffix = " [green]<- recommended (free)[/green]"
+            console.print(f"  [cyan][{i}][/cyan] {model_name} ({label}){suffix}")
+        console.print()
+        console.print("  [dim]Get a free API key at https://openrouter.ai/settings/keys[/dim]")
+
+    console.print(f"  [cyan][{len(display_choices) + 1}][/cyan] Other (enter model name)")
 
     choice = Prompt.ask(
         "[bold green]>[/bold green]",
@@ -63,13 +104,13 @@ def _run_first_time_setup(workspace: Path) -> dict:
 
     try:
         idx = int(choice) - 1
-        if 0 <= idx < len(MODEL_CHOICES):
-            model, _, env_var = MODEL_CHOICES[idx]
+        if 0 <= idx < len(display_choices):
+            model, _, env_var = display_choices[idx]
         else:
             model = Prompt.ask("  Enter model name").strip()
             env_var = None
     except ValueError:
-        model = choice if "/" in choice or len(choice) > 3 else "claude-sonnet-4-5"
+        model = choice if "/" in choice or len(choice) > 3 else display_choices[0][0]
         env_var = None
 
     console.print()
@@ -99,6 +140,34 @@ def _run_first_time_setup(workspace: Path) -> dict:
         "model": model,
         "resume": {"auto": auto_resume},
     }
+
+
+def _print_startup_guidelines(config: dict) -> None:
+    """Print a Getting Started panel after first-time setup."""
+    model = config.get("model", "")
+    lines = []
+
+    if "groq" in model:
+        lines.append("[yellow]Rate limits:[/yellow] Groq free tier allows ~30 req/min, ~14,400 req/day")
+    if "openrouter" in model:
+        lines.append("[yellow]Rate limits:[/yellow] OpenRouter free models have varying limits")
+        lines.append("  Check limits: https://openrouter.ai/models")
+
+    lines.append("")
+    lines.append("[bold]Tips:[/bold]")
+    lines.append("  Get a free API key: https://openrouter.ai/settings/keys")
+    lines.append("  Don't edit .geekcode/ manually — GeekCode manages it automatically")
+    lines.append("  Commit .geekcode/ to git for team collaboration")
+    lines.append("")
+    lines.append("[dim]Ctrl+C[/dim] interrupt  [dim]Ctrl+D[/dim] or [dim]/exit[/dim] quit  [dim]↑/↓[/dim] history  [dim]/help[/dim] commands")
+
+    console.print(Panel(
+        "\n".join(lines),
+        title="Getting Started",
+        border_style="blue",
+        padding=(1, 2),
+    ))
+    console.print()
 
 
 def ensure_initialized(workspace: Path, interactive: bool = True) -> Path:
@@ -132,6 +201,9 @@ def ensure_initialized(workspace: Path, interactive: bool = True) -> Path:
 
         console.print(f"[dim]Initialized .geekcode/ in {workspace}[/dim]\n")
 
+        if interactive and sys.stdin.isatty():
+            _print_startup_guidelines(config)
+
     return geekcode_dir
 
 
@@ -153,13 +225,41 @@ class GeekCodeREPL:
         self.workspace = workspace
         self.geekcode_dir = ensure_initialized(workspace)
         self.running = True
+        self._ctrlc_count = 0
+        self._input_count = 0
+        self._init_readline()
 
-        # Handle Ctrl+C gracefully
-        signal.signal(signal.SIGINT, self._handle_interrupt)
+    def _init_readline(self):
+        """Initialize readline for arrow-key history."""
+        try:
+            import readline
+        except ImportError:
+            try:
+                import pyreadline3 as readline
+            except ImportError:
+                self._readline = None
+                return
+        self._readline = readline
+        self._history_file = self.geekcode_dir / "input_history"
+        readline.set_history_length(500)
+        if self._history_file.exists():
+            try:
+                readline.read_history_file(str(self._history_file))
+            except (OSError, IOError):
+                pass
 
-    def _handle_interrupt(self, signum, frame):
-        """Handle Ctrl+C."""
-        console.print("\n[dim]Use /exit to quit[/dim]")
+    def _save_history(self):
+        """Persist readline history to disk."""
+        if self._readline is not None:
+            try:
+                self._readline.write_history_file(str(self._history_file))
+            except (OSError, IOError):
+                pass
+
+    def _get_input(self) -> str:
+        """Get user input with Rich prompt prefix and readline support."""
+        console.print("[bold green]> [/bold green]", end="")
+        return input().strip()
 
     def _create_agent(self):
         """Create a fresh agent (reads all state from files)."""
@@ -167,12 +267,35 @@ class GeekCodeREPL:
         return Agent(self.workspace)
 
     def _print_banner(self):
-        """Print welcome banner."""
+        """Print welcome banner with ASCII art."""
+        ascii_art = r"""
+  ██████╗ ███████╗███████╗██╗  ██╗ ██████╗ ██████╗ ██████╗ ███████╗
+ ██╔════╝ ██╔════╝██╔════╝██║ ██╔╝██╔════╝██╔═══██╗██╔══██╗██╔════╝
+ ██║  ███╗█████╗  █████╗  █████╔╝ ██║     ██║   ██║██║  ██║█████╗
+ ██║   ██║██╔══╝  ██╔══╝  ██╔═██╗ ██║     ██║   ██║██║  ██║██╔══╝
+ ╚██████╔╝███████╗███████╗██║  ██╗╚██████╗╚██████╔╝██████╔╝███████╗
+  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═════╝ ╚══════╝"""
+        console.print(Text(ascii_art, style="bold blue"))
         console.print()
-        console.print("[bold blue]GeekCode[/bold blue] [dim]v" + __version__ + "[/dim]")
-        console.print(f"[dim]Workspace: {self.workspace}[/dim]")
-        console.print("[dim]Type your task, or /help for commands[/dim]")
+        info = Text()
+        info.append(f"  v{__version__}", style="bold cyan")
+        info.append("  |  ", style="dim")
+        info.append(f"Workspace: {self.workspace}", style="dim")
+        console.print(info)
+        console.print("  [dim]Type your task, or /help for commands. /exit to quit.[/dim]")
+        console.print("  [dim]Ctrl+C to interrupt, Ctrl+D or /exit to quit. Up/down arrows for history.[/dim]")
         console.print()
+
+    def _print_goodbye(self):
+        """Print farewell visual."""
+        console.print()
+        console.print(Panel(
+            "[bold blue]Thanks for using GeekCode![/bold blue]\n"
+            f"[dim]Your session is saved in .geekcode/[/dim]\n"
+            "[dim]See you next time![/dim]",
+            border_style="blue",
+            padding=(1, 2),
+        ))
 
     def _print_help(self):
         """Print help message."""
@@ -372,13 +495,36 @@ class GeekCodeREPL:
             conv_file.unlink()
         console.print("[green]Started new conversation[/green]")
 
+    def _save_paused_state(self, task: str):
+        """Save paused state so the task can be resumed later."""
+        import yaml
+        from datetime import datetime
+        state_file = self.geekcode_dir / "state.yaml"
+        state = {}
+        if state_file.exists():
+            with open(state_file) as f:
+                state = yaml.safe_load(f) or {}
+        state["status"] = "paused"
+        state["paused_task"] = task
+        state["paused_at"] = datetime.utcnow().isoformat()
+        with open(state_file, "w") as f:
+            yaml.dump(state, f, default_flow_style=False)
+
     def _execute_task(self, task: str):
         """Execute a user task."""
         agent = self._create_agent()
+        self._ctrlc_count = 0
 
         # Show working indicator
-        with console.status("[bold blue]Thinking...[/bold blue]", spinner="dots"):
-            result = agent.run(task)
+        try:
+            with console.status("[bold blue]Thinking...[/bold blue]", spinner="dots"):
+                result = agent.run(task)
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Interrupted. Saving checkpoint...[/yellow]")
+            self._save_paused_state(task)
+            self._save_history()
+            console.print("[dim]Progress saved. Use /loop resume to continue, or type a new task.[/dim]")
+            return
 
         if result.completed:
             # Show cache info if hit
@@ -653,11 +799,16 @@ class GeekCodeREPL:
 
         while self.running:
             try:
-                # Get user input
-                user_input = Prompt.ask("[bold green]>[/bold green]").strip()
+                # Get user input (with readline arrow-key history)
+                user_input = self._get_input()
+                self._ctrlc_count = 0
 
                 if not user_input:
                     continue
+
+                self._input_count += 1
+                if self._input_count % 5 == 0:
+                    self._save_history()
 
                 # Handle commands
                 if user_input.startswith("/"):
@@ -665,20 +816,58 @@ class GeekCodeREPL:
                         break
                     continue
 
+                # Intercept exit keywords before sending to LLM
+                EXIT_KEYWORDS = {"quit", "exit", "close", "bye", "goodbye", "q"}
+                if user_input.lower().strip() in EXIT_KEYWORDS:
+                    break
+
                 # Execute as task
                 self._execute_task(user_input)
                 console.print()
 
             except EOFError:
                 # Ctrl+D
+                self._save_history()
                 break
             except KeyboardInterrupt:
-                console.print()
+                self._ctrlc_count += 1
+                if self._ctrlc_count >= 2:
+                    console.print("\n[dim]Saving and exiting...[/dim]")
+                    self._save_history()
+                    break
+                console.print("\n[dim]Press Ctrl+C again to exit, or type a command.[/dim]")
                 continue
             except Exception as e:
                 console.print(f"[red]Error: {e}[/red]")
 
-        console.print("\n[dim]Goodbye![/dim]")
+        self._save_history()
+        self._print_goodbye()
+
+
+def _is_project_directory(path: Path) -> bool:
+    """Check if path looks like a project/workspace directory."""
+    project_markers = [
+        ".git", ".svn", ".hg",                    # VCS
+        "package.json", "pyproject.toml",          # Package configs
+        "Cargo.toml", "go.mod", "pom.xml",         # Language projects
+        "Makefile", "CMakeLists.txt",              # Build systems
+        ".geekcode",                                # Already initialized
+        "requirements.txt", "setup.py", "setup.cfg",
+        "Gemfile", "build.gradle", "build.sbt",
+        ".project", ".idea", ".vscode",            # IDEs
+        "docker-compose.yml", "Dockerfile",
+    ]
+    return any((path / marker).exists() for marker in project_markers)
+
+
+def _find_project_root() -> Optional[Path]:
+    """Walk up from cwd looking for a project marker. Returns None if none found."""
+    current = Path.cwd()
+    while current != current.parent:
+        if _is_project_directory(current):
+            return current
+        current = current.parent
+    return None
 
 
 @click.command()
@@ -702,6 +891,19 @@ def cli(version: bool, init: bool, task: tuple) -> None:
         return
 
     workspace = find_workspace()
+
+    # Reject running at root/home with no project markers
+    if not _is_project_directory(workspace):
+        project_root = _find_project_root()
+        if project_root:
+            workspace = project_root
+        else:
+            console.print("[red]Error: Not inside a project directory.[/red]")
+            console.print(
+                "[dim]Navigate to a project folder (with .git, package.json, etc.) "
+                "and try again.[/dim]"
+            )
+            sys.exit(1)
 
     if init:
         ensure_initialized(workspace)

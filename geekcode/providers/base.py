@@ -111,7 +111,10 @@ class OpenAIProvider(Provider):
         try:
             import openai
         except ImportError:
-            raise ImportError("openai package required. Install with: pip install geekcode[openai]")
+            raise ImportError(
+                "openai package not available. If using the binary, please report this issue. "
+                "If using pip, install with: pip install geekcode[openai]"
+            )
 
         api_key = self.get_api_key()
         if not api_key:
@@ -174,7 +177,8 @@ class AnthropicProvider(Provider):
             import anthropic
         except ImportError:
             raise ImportError(
-                "anthropic package required. Install with: pip install geekcode[anthropic]"
+                "anthropic package not available. If using the binary, please report this issue. "
+                "If using pip, install with: pip install geekcode[anthropic]"
             )
 
         api_key = self.get_api_key()
@@ -236,7 +240,8 @@ class GoogleProvider(Provider):
             import google.generativeai as genai
         except ImportError:
             raise ImportError(
-                "google-generativeai package required. Install with: pip install geekcode[google]"
+                "google-generativeai package not available. If using the binary, please report this issue. "
+                "If using pip, install with: pip install geekcode[google]"
             )
 
         api_key = self.get_api_key()
