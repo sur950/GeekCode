@@ -38,11 +38,25 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          pip install -e ".[all]"
+          pip install -e ".[openai,anthropic,google]"
 
       - name: Build binary with PyInstaller
         run: |
-          pyinstaller --onefile --name ${{ matrix.binary_name }} --collect-all geekcode geekcode/cli/main.py
+          pyinstaller --onefile --name ${{ matrix.binary_name }} \
+            --collect-all geekcode \
+            --exclude-module torch \
+            --exclude-module transformers \
+            --exclude-module scipy \
+            --exclude-module sklearn \
+            --exclude-module numpy \
+            --exclude-module chromadb \
+            --exclude-module sentence_transformers \
+            --exclude-module nvidia \
+            --exclude-module triton \
+            --exclude-module onnxruntime \
+            --exclude-module tensorflow \
+            --exclude-module tensorboard \
+            geekcode/cli/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
