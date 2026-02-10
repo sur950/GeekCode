@@ -4,25 +4,25 @@ class Geekcode < Formula
   desc "Filesystem-driven AI agent for knowledge work"
   homepage "https://github.com/sur950/GeekCode"
   url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
-  sha256 "REPLACE_WITH_SHA256_OF_RELEASE_TARBALL"
+  sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
   license "Apache-2.0"
   head "https://github.com/sur950/GeekCode.git", branch: "main"
 
   depends_on "python@3.12"
 
   resource "click" do
-    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.0.tar.gz"
-    sha256 "95f04f123078b0a289ae73c894f0c31dc35bd2cd374f454fc6136fa53fb8e974"
+    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
+    sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
   end
 
   resource "pyyaml" do
-    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.0.tar.gz"
-    sha256 "95f04f123078b0a289ae73c894f0c31dc35bd2cd374f454fc6136fa53fb8e974"
+    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
+    sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
   end
 
   resource "rich" do
-    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.0.tar.gz"
-    sha256 "95f04f123078b0a289ae73c894f0c31dc35bd2cd374f454fc6136fa53fb8e974"
+    url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.1.tar.gz"
+    sha256 "e9db87b60a18ae94edc1f6c31849d8dbf223d1aec8164e68a533dd810e030658"
   end
 
   def install
