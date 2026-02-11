@@ -4,8 +4,8 @@
 <rect x="120" y="53.5" width="318.1" height="31.7" rx="4" fill="#10B981"/>
 <text x="444" y="73" font-size="12" font-weight="bold" fill="#10B981">28.0s</text>
 <text x="112" y="122" text-anchor="end" font-size="12" fill="#475569">GeekCode</text>
-<rect x="120" y="102.3" width="298.4" height="31.7" rx="4" fill="#6C63FF"/>
-<text x="424" y="122" font-size="12" font-weight="bold" fill="#6C63FF">26.3s</text>
+<rect x="120" y="102.3" width="304.0" height="31.7" rx="4" fill="#6C63FF"/>
+<text x="430" y="122" font-size="12" font-weight="bold" fill="#6C63FF">26.8s</text>
 <text x="112" y="171" text-anchor="end" font-size="12" fill="#475569">Gemini CLI</text>
 <rect x="120" y="151.0" width="330.0" height="31.7" rx="4" fill="#F59E0B"/>
 <text x="456" y="171" font-size="12" font-weight="bold" fill="#F59E0B">29.1s</text>

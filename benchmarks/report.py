@@ -82,6 +82,7 @@ class ReportGenerator:
             "Resume After Close":  {"geekcode": True},
             "Token Caching":       {"geekcode": True},
             "Model Switching":     {"geekcode": True},
+            "Workspace Queries":   {"geekcode": True, "claude_code": True},
             "Multi-Domain":        {"geekcode": True, "chatgpt_cli": True, "gemini_cli": True, "perplexity": True},
             "Open Source":         {"geekcode": True, "aider": True, "codex_cli": True},
             "Local Models (Ollama)": {"geekcode": True, "aider": True},

@@ -318,9 +318,17 @@ class Agent:
         task: str,
         files: Optional[List[str]],
     ) -> str:
-        """Build context by reading from indexed files."""
+        """Build context by reading from indexed files and live workspace data."""
         context_parts = []
 
+        # 1. Gather live workspace data (git log, status, etc.)
+        from geekcode.core.workspace_query import gather_workspace_context
+
+        live_context = gather_workspace_context(task, self.workspace)
+        if live_context:
+            context_parts.append(f"## Live Workspace Data\n{live_context}")
+
+        # 2. File-based context
         if files:
             for file_path in files:
                 path = Path(file_path)
@@ -406,7 +414,14 @@ class Agent:
 
         # Add task
         parts.append(f"\n## Current Task\n{task}")
-        parts.append("\nRespond concisely and directly.")
+        parts.append(
+            "\nRespond concisely and directly. "
+            "If workspace data or file contents are provided above, use them "
+            "to answer the question directly — do NOT tell the user to run "
+            "commands or open files themselves. "
+            "If code files are included, analyze them to answer questions. "
+            "If documents are included, extract the relevant information."
+        )
 
         return "\n".join(parts)
 
