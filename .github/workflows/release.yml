@@ -125,6 +125,38 @@ jobs:
           **pip:**
           \`\`\`bash
           pip install geekcode
+          \`\`\`
+          
+          ---
+
+          ### Uninstall
+
+          **macOS (Homebrew):**
+          \`\`\`bash
+          brew uninstall geekcode
+          brew untap sur950/geekcode
+          \`\`\`
+
+          **macOS / Linux (Direct Binary):**
+          \`\`\`bash
+          sudo rm -f /usr/local/bin/geekcode
+          // or if installed to custom location:
+          sudo rm -f $(which geekcode)
+          \`\`\`
+
+          **Windows (Winget):**
+          \`\`\`powershell
+          winget uninstall sur950.GeekCode
+          \`\`\`
+
+          **pip:**
+          \`\`\`bash
+          pip uninstall geekcode
+          \`\`\`
+
+          To remove project-level data:
+          \`\`\`bash
+          rm -rf .geekcode
           \`\`\`"
 
           # If release already exists, upload assets to it; otherwise create new

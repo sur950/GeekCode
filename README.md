@@ -12,295 +12,69 @@ GeekCode is an interactive AI agent that runs in your terminal. Like Claude Code
 - **Edit-test loop** - Agentic coding: edits files, runs tests, iterates until green
 - **Token efficient** - Caches responses, uses summaries, minimizes API calls
 
-## Quick Start
+---
 
-```bash
-# Install (macOS/Linux)
-brew install sur950/geekcode/geekcode
-# or: curl -fsSL https://github.com/sur950/GeekCode/releases/latest/download/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+## Architecture
 
-# Windows
-# winget install sur950.GeekCode
-
-# Start in any directory
-cd your-project
-geekcode
-```
-
-That's it. GeekCode opens an interactive prompt:
+GeekCode is built around a strict separation of runtime, reasoning, and state.
 
 ```
-GeekCode v1.0.1
-Workspace: /Users/you/your-project
-Type your task, or /help for commands
-
-> Explain this codebase
-
-[Agent analyzes files and responds...]
-
-> What does the auth module do?
-
-[Agent responds with context from previous question...]
-
-> /exit
-```
-
-## How It Works
-
-```
-┌────────────────────────────────────────────────────┐
-│  $ geekcode                                        │
-│                                                    │
-│  GeekCode v1.0.1                                   │
-│  Workspace: ~/my-project                           │
-│                                                    │
-│  > Analyze the insurance policy                    │
-│                                                    │
-│  The policy covers...                              │
-│  ─ claude-3-sonnet · 1,234 tokens · a1b2c3d4      │
-│                                                    │
-│  > What are the exclusions?                        │
-│                                                    │
-│  Based on the policy analyzed above...             │
-│  ─ claude-3-sonnet · 856 tokens · e5f6g7h8        │
-│                                                    │
-│  > /exit                                           │
-└────────────────────────────────────────────────────┘
+$ geekcode
         │
         ▼
-┌────────────────────────────────────────────────────┐
-│  ~/my-project/.geekcode/                           │
-│  ├── config.yaml      # Settings                   │
-│  ├── state.yaml       # Current task state         │
-│  ├── context/         # Indexed files              │
-│  ├── cache/           # Response cache             │
-│  └── history/         # All conversations          │
-└────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ CLI Runtime (Python 3.10+)              │
+│  - Interactive REPL                     │
+│  - Command Router                       │
+│  - Model Switching                      │
+│  - Benchmark Engine                     │
+└──────────────────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────────────────┐
+│ Core Agent Engine                       │
+│  - Decision Engine                      │
+│  - Coding Loop (edit → test → iterate)  │
+│  - Workspace Query Engine               │
+│  - Token Cache                          │
+│  - MCPorter (Lean MCP Bridge)           │
+└──────────────────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────────────────┐
+│ Retrieval & Reasoning Layer             │
+│  - QMD (Local Hybrid Search)            │
+│  - Custom RAG                           │
+│  - RLM (Recursive Language Model)       │
+└──────────────────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────────────────┐
+│ Filesystem State (.geekcode/)           │
+│  - state.yaml (checkpoint)              │
+│  - conversation.yaml                    │
+│  - context/ (indexed chunks)            │
+│  - cache/ (LLM responses)               │
+│  - history/ (audit trail)               │
+└──────────────────────────────────────────┘
 ```
-
-**Key insight**: When you close the terminal and reopen GeekCode later, it reads from `.geekcode/` and picks up exactly where you left off.
-
-## Installation
-
-### macOS (Homebrew)
-
-```bash
-brew install sur950/geekcode/geekcode
-```
-
-### macOS (Direct Binary — Apple Silicon)
-
-```bash
-curl -fsSL https://github.com/sur950/GeekCode/releases/latest/download/geekcode-macos-arm64 -o /usr/local/bin/geekcode
-chmod +x /usr/local/bin/geekcode
-```
-
-### Linux
-
-```bash
-curl -fsSL https://github.com/sur950/GeekCode/releases/latest/download/geekcode-linux-x64 -o /usr/local/bin/geekcode
-chmod +x /usr/local/bin/geekcode
-```
-
-### Windows (Winget)
-
-```powershell
-winget install sur950.GeekCode
-```
-
-### Windows (Direct Binary)
-
-Download `geekcode-win-x64.exe` from [Releases](https://github.com/sur950/GeekCode/releases/latest) and add it to your PATH.
-
-### pip
-
-```bash
-pip install geekcode
-```
-
-<details>
-<summary><strong>From Source</strong></summary>
-
-```bash
-git clone https://github.com/sur950/GeekCode.git
-cd GeekCode
-pip install -e ".[all]"    # editable install with all providers
-# or
-make install               # build standalone binary
-```
-
-</details>
-
-All release binaries and checksums are available on the [GitHub Releases](https://github.com/sur950/GeekCode/releases) page.
 
 ---
 
-## Uninstall
+### Filesystem as the Database
 
-### Homebrew
+Every execution cycle:
 
-```bash
-brew uninstall geekcode
-```
+1. **READ** minimal state from disk
+2. **EXECUTE** task with selected model
+3. **WRITE** checkpoint + cache
+4. **EXIT safely**
 
-### Direct Binary (macOS / Linux)
+There is no hidden memory pool.
 
-```bash
-sudo rm -f /usr/local/bin/geekcode
-```
+As long as disk space exists, context persists.
 
-### Windows (Winget)
-
-```powershell
-winget uninstall sur950.GeekCode
-```
-
-### pip
-
-```bash
-pip uninstall geekcode
-```
-
-To remove project-level data, delete the `.geekcode/` directory in each project where you used GeekCode.
-
-## Usage
-
-### Interactive Mode (Default)
-
-```bash
-geekcode
-```
-
-Opens the chat interface. Type tasks, get responses.
-
-### Single Task
-
-```bash
-geekcode "Explain the main.py file"
-```
-
-Runs one task and exits.
-
-### Commands (Inside Chat)
-
-| Command | Description |
-|---------|-------------|
-| `/help`, `/?` | Show help |
-| `/status` | Current state, model, cache stats |
-| `/history` | Recent task history |
-| `/models` | List all available providers and models |
-| `/model <name>` | Switch model (e.g., `/model gpt-4o`) |
-| `/tools` | List MCPorter tools and token savings |
-| `/tools refresh` | Re-fetch tool manifests from MCP servers |
-| `/tools info <name>` | Show full schema for a specific tool |
-| `/benchmark run [domain]` | Run benchmarks (all or single domain) |
-| `/benchmark report` | Generate SVG charts and markdown report |
-| `/newchat` | Start fresh conversation (clear context) |
-| `/clear` | Clear screen |
-| `/reset` | Reset task state |
-| `/exit`, `/quit`, `/q` | Exit GeekCode |
-
-## Configuration
-
-### First-Run Setup
-
-When you run `geekcode` in a new project, it asks a few questions:
-
-1. **Which LLM?** — Picks Ollama automatically if running locally, otherwise recommends
-   OpenRouter (free), Groq (free tier), or any of Claude, GPT-4o, Gemini, Together
-2. **Auto-resume?** — Whether to resume previous sessions automatically
-3. **API key check** — Verifies the required environment variable is set
-
-All preferences are saved to `.geekcode/config.yaml` in the project directory. **There is no global config** — only binaries and runtime exist at the global level. This means:
-- No secrets on disk, ever
-- No global state that can be breached
-- Each project is fully self-contained
-
-### API Keys (Environment Variables Only)
-
-API keys are **never stored in files**. Export them in your shell profile:
-
-```bash
-# Add to ~/.bashrc, ~/.zshrc, etc.
-export ANTHROPIC_API_KEY="sk-ant-..."
-export OPENAI_API_KEY="sk-..."
-export OPENROUTER_API_KEY="sk-or-..."
-export TOGETHER_API_KEY="..."
-export GROQ_API_KEY="gsk_..."
-```
-
-> **Free to start**: Sign up and get a free API key at
-> [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
-> — access 100+ models including DeepSeek, Llama, Mistral, and more.
-
-Switch models inside the chat:
-
-```
-> /model gpt-4o
-> /model groq/llama-3.3-70b-versatile
-> /model together/mixtral-8x7b
-> /model openrouter/deepseek/deepseek-r1
-```
-
-### Project Config: `.geekcode/config.yaml`
-
-Created automatically during first-run setup. All config is per-project:
-
-```yaml
-project:
-  name: my-project
-model: claude-sonnet-4-5
-resume:
-  auto: true
-context:
-  include:
-    - "**/*.py"
-    - "**/*.md"
-  exclude:
-    - "node_modules/**"
-cache:
-  enabled: true
-  ttl_hours: 24
-```
-
-### Team Usage & `.geekcode/`
-
-- **Commit `.geekcode/` to git** — team members can resume sessions and share context
-- **Don't edit files inside `.geekcode/` manually** — GeekCode manages them automatically
-- **Rate limits**: Groq free tier allows ~30 requests/min. OpenRouter free models have
-  varying limits — check [openrouter.ai/models](https://openrouter.ai/models) for details
-
-## Domains
-
-GeekCode isn't just for coding. It works across:
-
-### Coding & Engineering
-```
-> Explain the authentication flow
-> Add tests for user_service.py
-> Refactor this to use async/await
-```
-
-### Finance & Insurance
-```
-> What does this policy cover?
-> Compare these two guidelines
-> Identify compliance risks
-```
-
-### Healthcare
-```
-> Is this procedure covered?
-> What are the exclusions?
-> Review the claims adjudication rules
-```
-
-### General/Research
-```
-> Research AI regulation trends
-> Summarize these documents
-> Create a report from multiple sources
-```
+---
 
 ## Why GeekCode? How It Differs from Every Other CLI Agent
 
@@ -325,11 +99,11 @@ Every other agent stores state in terminal memory. GeekCode stores **everything*
 
 The agent core is built on three filesystem primitives:
 
-| Operation | What it does | Why it matters |
-|-----------|-------------|----------------|
-| **READ** | Load state, config, conversation, cache, context from `.geekcode/` files | Only reads what is needed for the current task — no bulk loading |
-| **WRITE** | Checkpoint state, save response cache, append history | Every execution is crash-safe — kill the process, resume exactly where you left off |
-| **DELETE** | Clear stale cache, rotate old history, clean expired entries | Disk stays lean without manual intervention |
+| Operation  | What it does                                                             | Why it matters                                                                      |
+| ---------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| **READ**   | Load state, config, conversation, cache, context from `.geekcode/` files | Only reads what is needed for the current task — no bulk loading                    |
+| **WRITE**  | Checkpoint state, save response cache, append history                    | Every execution is crash-safe — kill the process, resume exactly where you left off |
+| **DELETE** | Clear stale cache, rotate old history, clean expired entries             | Disk stays lean without manual intervention                                         |
 
 No hidden memory pools. No background token consumption. Every byte the LLM sees is something you can inspect in a YAML file.
 
@@ -390,12 +164,12 @@ How it works:
 2. **CLI subprocess execution** — Tools run as local subprocesses, not through the model's context window.
 3. **Results saved to disk** — Full output goes to `.geekcode/tools/results/`. The LLM gets a short summary. If it needs more detail, it reads the file.
 
-| MCP Server | Standard MCP | MCPorter | Savings |
-|---|---|---|---|
-| Playwright | ~20,000 tokens | ~120 tokens | 99.4% |
-| Chrome | ~15,000 tokens | ~90 tokens | 99.4% |
-| Filesystem | ~3,000 tokens | ~60 tokens | 98.0% |
-| GitHub | ~8,000 tokens | ~80 tokens | 99.0% |
+| MCP Server | Standard MCP   | MCPorter    | Savings |
+| ---------- | -------------- | ----------- | ------- |
+| Playwright | ~20,000 tokens | ~120 tokens | 99.4%   |
+| Chrome     | ~15,000 tokens | ~90 tokens  | 99.4%   |
+| Filesystem | ~3,000 tokens  | ~60 tokens  | 98.0%   |
+| GitHub     | ~8,000 tokens  | ~80 tokens  | 99.0%   |
 
 Configure in `.geekcode/config.yaml`:
 
@@ -412,20 +186,132 @@ Use `/tools` in the REPL to list available tools, `/tools refresh` to re-fetch f
 
 ### 7. Side-by-Side Comparison
 
-| Feature | GeekCode | Claude Code | Codex CLI | Aider | ChatGPT CLI | Perplexity | Gemini CLI |
-|---------|----------|-------------|-----------|-------|-------------|------------|------------|
-| State storage | Filesystem (YAML) | Terminal memory | Sandbox | Git-based | Terminal memory | API stateless | Terminal memory |
-| Context limit | Disk space | ~200k tokens | ~128k tokens | ~128k tokens | ~128k tokens | API limit | ~1M tokens |
-| Resume after close | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Mid-task model switch | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Token caching | ✅ (24h TTL) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Domains | All 4 | Coding | Coding | Coding | Finance, Health, Research | Finance, Health, Research | Finance, Health, Research |
-| Workspace queries | ✅ (git, files, docs, symbols) | ✅ (tool use) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Document analysis | RLM (recursive) | Raw context dump | N/A | N/A | Raw context dump | Web search | Raw context dump |
-| MCP support | MCPorter (lean) | ✅ (token-routed) | ❌ | ❌ | ❌ | ❌ | ✅ (token-routed) |
-| Local models (Ollama) | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Open source | ✅ (Apache 2.0) | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Crash recovery | ✅ Auto (checkpoint) | ❌ Lost | ❌ Lost | Git restore | ❌ Lost | ❌ N/A | ❌ Lost |
+| Feature               | GeekCode                       | Claude Code       | Codex CLI    | Aider        | ChatGPT CLI               | Perplexity                | Gemini CLI                |
+| --------------------- | ------------------------------ | ----------------- | ------------ | ------------ | ------------------------- | ------------------------- | ------------------------- |
+| State storage         | Filesystem (YAML)              | Terminal memory   | Sandbox      | Git-based    | Terminal memory           | API stateless             | Terminal memory           |
+| Context limit         | Disk space                     | ~200k tokens      | ~128k tokens | ~128k tokens | ~128k tokens              | API limit                 | ~1M tokens                |
+| Resume after close    | ✅                             | ❌                | ❌           | ❌           | ❌                        | ❌                        | ❌                        |
+| Mid-task model switch | ✅                             | ❌                | ❌           | ❌           | ❌                        | ❌                        | ❌                        |
+| Token caching         | ✅ (24h TTL)                   | ❌                | ❌           | ❌           | ❌                        | ❌                        | ❌                        |
+| Domains               | All 4                          | Coding            | Coding       | Coding       | Finance, Health, Research | Finance, Health, Research | Finance, Health, Research |
+| Workspace queries     | ✅ (git, files, docs, symbols) | ✅ (tool use)     | ❌           | ❌           | ❌                        | ❌                        | ❌                        |
+| Document analysis     | RLM (recursive)                | Raw context dump  | N/A          | N/A          | Raw context dump          | Web search                | Raw context dump          |
+| MCP support           | MCPorter (lean)                | ✅ (token-routed) | ❌           | ❌           | ❌                        | ❌                        | ✅ (token-routed)         |
+| Local models (Ollama) | ✅                             | ❌                | ❌           | ✅           | ❌                        | ❌                        | ❌                        |
+| Open source           | ✅ (Apache 2.0)                | ❌                | ✅           | ✅           | ❌                        | ❌                        | ❌                        |
+| Crash recovery        | ✅ Auto (checkpoint)           | ❌ Lost           | ❌ Lost      | Git restore  | ❌ Lost                   | ❌ N/A                    | ❌ Lost                   |
+
+---
+
+## Quick Start
+
+```bash
+# Install (macOS/Linux)
+brew install sur950/geekcode/geekcode
+# or: curl -fsSL https://github.com/sur950/GeekCode/releases/latest/download/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+
+# Windows
+# winget install sur950.GeekCode
+
+# Start in any directory
+cd your-project
+geekcode
+```
+
+For more details check the release page:
+
+👉 [https://github.com/sur950/GeekCode/releases](https://github.com/sur950/GeekCode/releases)
+
+---
+
+## Usage
+
+### Interactive Mode (Default)
+
+```bash
+geekcode
+```
+
+Opens the chat interface. Type tasks, get responses.
+
+### Single Task
+
+```bash
+geekcode "Explain the main.py file"
+```
+
+Runs one task and exits.
+
+### Commands (Inside Chat)
+
+| Command                   | Description                              |
+| ------------------------- | ---------------------------------------- |
+| `/help`, `/?`             | Show help                                |
+| `/status`                 | Current state, model, cache stats        |
+| `/history`                | Recent task history                      |
+| `/models`                 | List all available providers and models  |
+| `/model <name>`           | Switch model (e.g., `/model gpt-4o`)     |
+| `/tools`                  | List MCPorter tools and token savings    |
+| `/tools refresh`          | Re-fetch tool manifests from MCP servers |
+| `/tools info <name>`      | Show full schema for a specific tool     |
+| `/benchmark run [domain]` | Run benchmarks (all or single domain)    |
+| `/benchmark report`       | Generate SVG charts and markdown report  |
+| `/newchat`                | Start fresh conversation (clear context) |
+| `/clear`                  | Clear screen                             |
+| `/reset`                  | Reset task state                         |
+| `/exit`, `/quit`, `/q`    | Exit GeekCode                            |
+
+---
+
+## Configuration
+
+### First-Run Setup
+
+When you run `geekcode` in a new project, it asks a few questions:
+
+1. **Which LLM?** — Picks Ollama automatically if running locally, otherwise recommends
+   OpenRouter (free), Groq (free tier), or any of Claude, GPT-4o, Gemini, Together
+2. **Auto-resume?** — Whether to resume previous sessions automatically
+3. **API key check** — Verifies the required environment variable is set
+
+All preferences are saved to `.geekcode/config.yaml` in the project directory. **There is no global config** — only binaries and runtime exist at the global level. This means:
+
+- No secrets on disk, ever
+- No global state that can be breached
+- Each project is fully self-contained
+
+### API Keys (Environment Variables Only)
+
+API keys are **never stored in files**. Export them in your shell profile:
+
+```bash
+# Add to ~/.bashrc, ~/.zshrc, etc.
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-or-..."
+export TOGETHER_API_KEY="..."
+export GROQ_API_KEY="gsk_..."
+```
+
+> **Free to start**: Sign up and get a free API key at
+> [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
+> — access 100+ models including DeepSeek, Llama, Mistral, and more.
+
+Switch models inside the chat:
+
+```
+> /model gpt-4o
+> /model groq/llama-3.3-70b-versatile
+> /model together/mixtral-8x7b
+> /model openrouter/deepseek/deepseek-r1
+```
+
+### Team Usage & `.geekcode/`
+
+- **Commit `.geekcode/` to git** — team members can resume sessions and share context
+- **Don't edit files inside `.geekcode/` manually** — GeekCode manages them automatically
+- **Rate limits**: Groq free tier allows ~30 requests/min. OpenRouter free models have
+  varying limits — check [openrouter.ai/models](https://openrouter.ai/models) for details
 
 ---
 
@@ -433,26 +319,26 @@ Use `/tools` in the REPL to list available tools, `/tools refresh` to re-fetch f
 
 GeekCode is benchmarked against **domain-specific competitors** — each domain is compared against the tools that are strongest in that area. **80 tasks** total (20 per domain), 4 agents per domain.
 
-| Domain | GeekCode Model | Competitors | Why These |
-|---|---|---|---|
-| Coding | `claude-sonnet-4-5` | Claude Code, Codex CLI, Aider | The 3 best coding CLI tools |
-| Finance | `gpt-4o` | Perplexity, ChatGPT CLI, Gemini CLI | Research/analysis tools for financial work |
-| Healthcare | `gemini-2.0-flash` | Perplexity, ChatGPT CLI, Gemini CLI | Research tools for medical/policy analysis |
-| General/Research | `claude-sonnet-4-5` | Perplexity, ChatGPT CLI, Gemini CLI | Research and reasoning tools |
+| Domain           | GeekCode Model      | Competitors                         | Why These                                  |
+| ---------------- | ------------------- | ----------------------------------- | ------------------------------------------ |
+| Coding           | `claude-sonnet-4-5` | Claude Code, Codex CLI, Aider       | The 3 best coding CLI tools                |
+| Finance          | `gpt-4o`            | Perplexity, ChatGPT CLI, Gemini CLI | Research/analysis tools for financial work |
+| Healthcare       | `gemini-2.0-flash`  | Perplexity, ChatGPT CLI, Gemini CLI | Research tools for medical/policy analysis |
+| General/Research | `claude-sonnet-4-5` | Perplexity, ChatGPT CLI, Gemini CLI | Research and reasoning tools               |
 
 No other CLI agent can switch models mid-project while preserving full context.
 
 ### Overall Scores
 
-| Agent | Coding | Finance | Healthcare | General/Research | Overall |
-|---|---|---|---|---|---|
-| GeekCode | 88 | 80 | 75 | 81 | **81** |
-| Claude Code | 86 | — | — | — | **86** |
-| Aider | 84 | — | — | — | **84** |
-| Codex CLI | 83 | — | — | — | **83** |
-| ChatGPT CLI | — | 73 | 70 | 73 | **72** |
-| Perplexity | — | 70 | 67 | 72 | **70** |
-| Gemini CLI | — | 68 | 65 | 69 | **67** |
+| Agent       | Coding | Finance | Healthcare | General/Research | Overall |
+| ----------- | ------ | ------- | ---------- | ---------------- | ------- |
+| GeekCode    | 88     | 80      | 75         | 81               | **81**  |
+| Claude Code | 86     | —       | —          | —                | **86**  |
+| Aider       | 84     | —       | —          | —                | **84**  |
+| Codex CLI   | 83     | —       | —          | —                | **83**  |
+| ChatGPT CLI | —      | 73      | 70         | 73               | **72**  |
+| Perplexity  | —      | 70      | 67         | 72               | **70**  |
+| Gemini CLI  | —      | 68      | 65         | 69               | **67**  |
 
 > Claude Code, Codex CLI, and Aider are coding-only. ChatGPT CLI, Perplexity, and Gemini CLI cover research domains. **GeekCode is the only agent that competes across all 4 domains.**
 
@@ -466,18 +352,18 @@ No other CLI agent can switch models mid-project while preserving full context.
 
 ### Feature Matrix
 
-| Feature | GeekCode | Claude Code | Codex CLI | Aider | ChatGPT CLI | Perplexity | Gemini CLI |
-|---|---|---|---|---|---|---|---|
-| Filesystem State | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Resume After Close | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Token Caching | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Model Switching | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Workspace Queries | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Multi-Domain | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Open Source | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Local Models (Ollama) | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Edit-Test Loop | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| MCPorter (lean MCP) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Feature               | GeekCode | Claude Code | Codex CLI | Aider | ChatGPT CLI | Perplexity | Gemini CLI |
+| --------------------- | -------- | ----------- | --------- | ----- | ----------- | ---------- | ---------- |
+| Filesystem State      | ✅       | ❌          | ❌        | ❌    | ❌          | ❌         | ❌         |
+| Resume After Close    | ✅       | ❌          | ❌        | ❌    | ❌          | ❌         | ❌         |
+| Token Caching         | ✅       | ❌          | ❌        | ❌    | ❌          | ❌         | ❌         |
+| Model Switching       | ✅       | ❌          | ❌        | ❌    | ❌          | ❌         | ❌         |
+| Workspace Queries     | ✅       | ✅          | ❌        | ❌    | ❌          | ❌         | ❌         |
+| Multi-Domain          | ✅       | ❌          | ❌        | ❌    | ✅          | ✅         | ✅         |
+| Open Source           | ✅       | ❌          | ✅        | ✅    | ❌          | ❌         | ❌         |
+| Local Models (Ollama) | ✅       | ❌          | ❌        | ✅    | ❌          | ❌         | ❌         |
+| Edit-Test Loop        | ✅       | ✅          | ✅        | ✅    | ❌          | ❌         | ❌         |
+| MCPorter (lean MCP)   | ✅       | ❌          | ❌        | ❌    | ❌          | ❌         | ❌         |
 
 ### Coding (20 tasks — GeekCode, Claude Code, Codex CLI, Aider)
 
@@ -485,12 +371,12 @@ No other CLI agent can switch models mid-project while preserving full context.
   <img src="docs/benchmarks/coding_scores.svg" alt="Coding Scores" width="500">
 </p>
 
-| Agent | Parse JSON Config | Add Unit Tests | Refactor Async | Fix Race Condition | REST Endpoint | DB Migration | Error Handling | Code Review | SQL Optimization | CI Pipeline | Memory Leak | Auth Middleware | API Docs | Response Cache | Microservice | Logging | CSS Layout | WebSocket | Input Validation | Perf Profile | Avg |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| GeekCode | 89 | 84 | 92 | 86 | 85 | 91 | 86 | 87 | 85 | 89 | 89 | 89 | 87 | 87 | 86 | 90 | 88 | 86 | 84 | 89 | **88** |
-| Claude Code | 85 | 84 | 86 | 86 | 82 | 85 | 89 | 89 | 87 | 82 | 86 | 82 | 86 | 84 | 85 | 84 | 89 | 86 | 85 | 88 | **86** |
-| Aider | 80 | 85 | 82 | 83 | 87 | 87 | 82 | 83 | 88 | 88 | 84 | 83 | 86 | 85 | 81 | 86 | 86 | 82 | 87 | 86 | **84** |
-| Codex CLI | 83 | 83 | 86 | 82 | 80 | 80 | 81 | 87 | 83 | 84 | 85 | 80 | 85 | 84 | 83 | 81 | 85 | 81 | 82 | 83 | **83** |
+| Agent       | Parse JSON Config | Add Unit Tests | Refactor Async | Fix Race Condition | REST Endpoint | DB Migration | Error Handling | Code Review | SQL Optimization | CI Pipeline | Memory Leak | Auth Middleware | API Docs | Response Cache | Microservice | Logging | CSS Layout | WebSocket | Input Validation | Perf Profile | Avg    |
+| ----------- | ----------------- | -------------- | -------------- | ------------------ | ------------- | ------------ | -------------- | ----------- | ---------------- | ----------- | ----------- | --------------- | -------- | -------------- | ------------ | ------- | ---------- | --------- | ---------------- | ------------ | ------ |
+| GeekCode    | 89                | 84             | 92             | 86                 | 85            | 91           | 86             | 87          | 85               | 89          | 89          | 89              | 87       | 87             | 86           | 90      | 88         | 86        | 84               | 89           | **88** |
+| Claude Code | 85                | 84             | 86             | 86                 | 82            | 85           | 89             | 89          | 87               | 82          | 86          | 82              | 86       | 84             | 85           | 84      | 89         | 86        | 85               | 88           | **86** |
+| Aider       | 80                | 85             | 82             | 83                 | 87            | 87           | 82             | 83          | 88               | 88          | 84          | 83              | 86       | 85             | 81           | 86      | 86         | 82        | 87               | 86           | **84** |
+| Codex CLI   | 83                | 83             | 86             | 82                 | 80            | 80           | 81             | 87          | 83               | 84          | 85          | 80              | 85       | 84             | 83           | 81      | 85         | 81        | 82               | 83           | **83** |
 
 > GeekCode leads at 88 (+2 over Claude Code) thanks to workspace queries that auto-gather project context (git status, file structure, relevant code) plus the agentic edit-test loop — and it's the only tool here that also resumes, caches, and switches models.
 
@@ -508,12 +394,12 @@ No other CLI agent can switch models mid-project while preserving full context.
   <img src="docs/benchmarks/finance_scores.svg" alt="Finance Scores" width="500">
 </p>
 
-| Agent | Policy Coverage | Premium Calc | Risk Assessment | Claims Adjudication | Regulatory Compliance | Financial Statements | Portfolio Risk | Tax Implications | Exclusion Detection | Actuarial Tables | Fraud Patterns | Credit Scoring | Market Trends | Compliance Audit | Investment Review | Liability Assessment | Reinsurance | Loss Ratio | Underwriting | Financial Forecast | Avg |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| GeekCode | 80 | 83 | 82 | 77 | 84 | 74 | 79 | 82 | 74 | 82 | 83 | 77 | 83 | 77 | 80 | 82 | 74 | 80 | 84 | 77 | **80** |
-| ChatGPT CLI | 73 | 72 | 71 | 75 | 72 | 76 | 72 | 76 | 68 | 76 | 75 | 74 | 73 | 76 | 74 | 68 | 72 | 74 | 68 | 71 | **73** |
-| Perplexity | 67 | 66 | 72 | 73 | 68 | 68 | 76 | 67 | 67 | 76 | 70 | 71 | 67 | 69 | 73 | 75 | 68 | 67 | 66 | 66 | **70** |
-| Gemini CLI | 69 | 66 | 72 | 66 | 71 | 66 | 66 | 72 | 69 | 65 | 70 | 63 | 63 | 69 | 68 | 70 | 64 | 72 | 63 | 70 | **68** |
+| Agent       | Policy Coverage | Premium Calc | Risk Assessment | Claims Adjudication | Regulatory Compliance | Financial Statements | Portfolio Risk | Tax Implications | Exclusion Detection | Actuarial Tables | Fraud Patterns | Credit Scoring | Market Trends | Compliance Audit | Investment Review | Liability Assessment | Reinsurance | Loss Ratio | Underwriting | Financial Forecast | Avg    |
+| ----------- | --------------- | ------------ | --------------- | ------------------- | --------------------- | -------------------- | -------------- | ---------------- | ------------------- | ---------------- | -------------- | -------------- | ------------- | ---------------- | ----------------- | -------------------- | ----------- | ---------- | ------------ | ------------------ | ------ |
+| GeekCode    | 80              | 83           | 82              | 77                  | 84                    | 74                   | 79             | 82               | 74                  | 82               | 83             | 77             | 83            | 77               | 80                | 82                   | 74          | 80         | 84           | 77                 | **80** |
+| ChatGPT CLI | 73              | 72           | 71              | 75                  | 72                    | 76                   | 72             | 76               | 68                  | 76               | 75             | 74             | 73            | 76               | 74                | 68                   | 72          | 74         | 68           | 71                 | **73** |
+| Perplexity  | 67              | 66           | 72              | 73                  | 68                    | 68                   | 76             | 67               | 67                  | 76               | 70             | 71             | 67            | 69               | 73                | 75                   | 68          | 67         | 66           | 66                 | **70** |
+| Gemini CLI  | 69              | 66           | 72              | 66                  | 71                    | 66                   | 66             | 72               | 69                  | 65               | 70             | 63             | 63            | 69               | 68                | 70                   | 64          | 72         | 63           | 70                 | **68** |
 
 > GeekCode wins by 7 pts — workspace document parsing + RLM structured reading outperform flat-text approaches on financial analysis.
 
@@ -531,12 +417,12 @@ No other CLI agent can switch models mid-project while preserving full context.
   <img src="docs/benchmarks/healthcare_scores.svg" alt="Healthcare Scores" width="500">
 </p>
 
-| Agent | Clinical Guidelines | Drug Interactions | ICD-10 Coding | Prior Auth | Medical Necessity | Treatment Protocol | Patient Eligibility | Claims Rules | Formulary Check | Adverse Events | Care Pathways | Quality Metrics | HIPAA Compliance | Utilization Review | Discharge Planning | Population Health | Trial Matching | Record Summary | Benefit Plans | Provider Credentials | Avg |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| GeekCode | 76 | 76 | 75 | 73 | 76 | 80 | 73 | 77 | 75 | 71 | 73 | 71 | 76 | 73 | 74 | 77 | 71 | 74 | 79 | 73 | **75** |
-| ChatGPT CLI | 69 | 73 | 68 | 73 | 67 | 69 | 71 | 70 | 72 | 73 | 71 | 74 | 72 | 68 | 67 | 68 | 67 | 67 | 71 | 68 | **70** |
-| Perplexity | 65 | 66 | 63 | 70 | 73 | 68 | 64 | 72 | 63 | 72 | 64 | 66 | 64 | 72 | 63 | 65 | 64 | 73 | 71 | 70 | **67** |
-| Gemini CLI | 67 | 67 | 68 | 68 | 64 | 68 | 62 | 65 | 61 | 68 | 63 | 63 | 65 | 64 | 62 | 63 | 61 | 69 | 65 | 64 | **65** |
+| Agent       | Clinical Guidelines | Drug Interactions | ICD-10 Coding | Prior Auth | Medical Necessity | Treatment Protocol | Patient Eligibility | Claims Rules | Formulary Check | Adverse Events | Care Pathways | Quality Metrics | HIPAA Compliance | Utilization Review | Discharge Planning | Population Health | Trial Matching | Record Summary | Benefit Plans | Provider Credentials | Avg    |
+| ----------- | ------------------- | ----------------- | ------------- | ---------- | ----------------- | ------------------ | ------------------- | ------------ | --------------- | -------------- | ------------- | --------------- | ---------------- | ------------------ | ------------------ | ----------------- | -------------- | -------------- | ------------- | -------------------- | ------ |
+| GeekCode    | 76                  | 76                | 75            | 73         | 76                | 80                 | 73                  | 77           | 75              | 71             | 73            | 71              | 76               | 73                 | 74                 | 77                | 71             | 74             | 79            | 73                   | **75** |
+| ChatGPT CLI | 69                  | 73                | 68            | 73         | 67                | 69                 | 71                  | 70           | 72              | 73             | 71            | 74              | 72               | 68                 | 67                 | 68                | 67             | 67             | 71            | 68                   | **70** |
+| Perplexity  | 65                  | 66                | 63            | 70         | 73                | 68                 | 64                  | 72           | 63              | 72             | 64            | 66              | 64               | 72                 | 63                 | 65                | 64             | 73             | 71            | 70                   | **67** |
+| Gemini CLI  | 67                  | 67                | 68            | 68         | 64                | 68                 | 62                  | 65           | 61              | 68             | 63            | 63              | 65               | 64                 | 62                 | 63                | 61             | 69             | 65            | 64                   | **65** |
 
 > GeekCode wins by 5 pts — auto-finding and parsing policy documents + override/negation detection in RLM matters for claims analysis.
 
@@ -554,12 +440,12 @@ No other CLI agent can switch models mid-project while preserving full context.
   <img src="docs/benchmarks/general_scores.svg" alt="General Scores" width="500">
 </p>
 
-| Agent | Literature Review | Data Synthesis | Trend Analysis | Comparative Study | Exec Summary | Multi-Source Research | Policy Brief | Technical Report | Gap Analysis | Stakeholder Analysis | SWOT Analysis | Competitive Intel | Regulatory Landscape | Impact Assessment | Best Practices | Case Study | Cross-Domain Synthesis | Scenario Planning | Evidence Mapping | Strategic Recommendation | Avg |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| GeekCode | 82 | 86 | 84 | 79 | 77 | 83 | 80 | 79 | 77 | 81 | 83 | 85 | 78 | 82 | 85 | 77 | 78 | 83 | 82 | 80 | **81** |
-| ChatGPT CLI | 75 | 75 | 72 | 74 | 68 | 76 | 69 | 70 | 67 | 72 | 67 | 77 | 74 | 76 | 67 | 73 | 77 | 72 | 74 | 77 | **73** |
-| Perplexity | 68 | 75 | 73 | 72 | 76 | 72 | 76 | 76 | 64 | 75 | 77 | 63 | 74 | 67 | 68 | 76 | 77 | 74 | 76 | 64 | **72** |
-| Gemini CLI | 71 | 65 | 70 | 70 | 66 | 74 | 70 | 73 | 71 | 67 | 72 | 66 | 66 | 70 | 64 | 74 | 66 | 70 | 71 | 65 | **69** |
+| Agent       | Literature Review | Data Synthesis | Trend Analysis | Comparative Study | Exec Summary | Multi-Source Research | Policy Brief | Technical Report | Gap Analysis | Stakeholder Analysis | SWOT Analysis | Competitive Intel | Regulatory Landscape | Impact Assessment | Best Practices | Case Study | Cross-Domain Synthesis | Scenario Planning | Evidence Mapping | Strategic Recommendation | Avg    |
+| ----------- | ----------------- | -------------- | -------------- | ----------------- | ------------ | --------------------- | ------------ | ---------------- | ------------ | -------------------- | ------------- | ----------------- | -------------------- | ----------------- | -------------- | ---------- | ---------------------- | ----------------- | ---------------- | ------------------------ | ------ |
+| GeekCode    | 82                | 86             | 84             | 79                | 77           | 83                    | 80           | 79               | 77           | 81                   | 83            | 85                | 78                   | 82                | 85             | 77         | 78                     | 83                | 82               | 80                       | **81** |
+| ChatGPT CLI | 75                | 75             | 72             | 74                | 68           | 76                    | 69           | 70               | 67           | 72                   | 67            | 77                | 74                   | 76                | 67             | 73         | 77                     | 72                | 74               | 77                       | **73** |
+| Perplexity  | 68                | 75             | 73             | 72                | 76           | 72                    | 76           | 76               | 64           | 75                   | 77            | 63                | 74                   | 67                | 68             | 76         | 77                     | 74                | 76               | 64                       | **72** |
+| Gemini CLI  | 71                | 65             | 70             | 70                | 66           | 74                    | 70           | 73               | 71           | 67                   | 72            | 66                | 66                   | 70                | 64             | 74         | 66                     | 70                | 71               | 65                       | **69** |
 
 > GeekCode wins by 8 pts — workspace queries auto-gather project data (git history, file structure, code context, documents), and checkpoint/resume handles long multi-step research workflows.
 
@@ -583,7 +469,10 @@ geekcode
 ```
 
 Full report: [`docs/benchmarks/report.md`](docs/benchmarks/report.md)
+
 </details>
+
+---
 
 ## Project Structure
 
