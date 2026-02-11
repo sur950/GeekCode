@@ -3,8 +3,8 @@ class Geekcode < Formula
 
   desc "Filesystem-driven AI agent for knowledge work"
   homepage "https://github.com/sur950/GeekCode"
-  url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.5.tar.gz"
-  sha256 "f8ad5333c6a60b50f5b2c969b2a40a11585c0f9fc0ccd8b5e1410b669dfb955b"
+  url "https://github.com/sur950/GeekCode/archive/refs/tags/v1.0.6.tar.gz"
+  sha256 "adf3a35a0a0a062b5e372574b3124d660e33a5dc172e9615c43547bd217f2cef"
   license "Apache-2.0"
   head "https://github.com/sur950/GeekCode.git", branch: "main"
 
