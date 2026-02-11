@@ -34,14 +34,36 @@ def find_workspace() -> Path:
     return Path.cwd()
 
 
-def _detect_ollama() -> bool:
-    """Check if Ollama is running locally."""
+def _query_ollama_models():
+    """Query Ollama for installed models.
+
+    Returns:
+        (is_running, model_names) where model_names are short names
+        like "llama3", "codellama:13b", etc.
+    """
     try:
         import httpx
         r = httpx.get("http://localhost:11434/api/tags", timeout=2)
-        return r.status_code == 200
+        if r.status_code == 200:
+            data = r.json()
+            models = []
+            for m in data.get("models", []):
+                name = m.get("name", "")
+                if name:
+                    # Strip ":latest" suffix for cleaner display
+                    if name.endswith(":latest"):
+                        name = name[: -len(":latest")]
+                    models.append(name)
+            return True, models
+        return False, []
     except Exception:
-        return False
+        return False, []
+
+
+def _detect_ollama() -> bool:
+    """Check if Ollama is running locally."""
+    running, _ = _query_ollama_models()
+    return running
 
 
 MODEL_CHOICES = [
@@ -227,67 +249,96 @@ class GeekCodeREPL:
         self.running = True
         self._ctrlc_count = 0
         self._input_count = 0
-        self._init_readline()
+        self._ollama_models_cache = None
+        self._init_prompt_session()
 
-    # All slash commands for tab-completion
-    SLASH_COMMANDS = [
-        "/help", "/?",
-        "/status",
-        "/history",
-        "/models",
-        "/model ",
-        "/tools", "/tools refresh", "/tools info ",
-        "/benchmark run", "/benchmark run ", "/benchmark report",
-        "/loop", "/loop resume", "/loop reset",
-        "/newchat",
-        "/clear",
-        "/reset",
-        "/exit", "/quit", "/q",
-    ]
+    def _get_ollama_models(self):
+        """Get cached Ollama model names (lazy load)."""
+        if self._ollama_models_cache is None:
+            _, models = _query_ollama_models()
+            self._ollama_models_cache = models
+        return self._ollama_models_cache
 
-    def _init_readline(self):
-        """Initialize readline for arrow-key history and slash-command completion."""
-        try:
-            import readline
-        except ImportError:
-            try:
-                import pyreadline3 as readline
-            except ImportError:
-                self._readline = None
-                return
-        self._readline = readline
+    def _init_prompt_session(self):
+        """Initialize prompt_toolkit session with history and completion."""
+        from prompt_toolkit import PromptSession
+        from prompt_toolkit.history import FileHistory
+        from prompt_toolkit.key_binding import KeyBindings
+        from prompt_toolkit.styles import Style
+        from geekcode.cli.completer import GeekCodeCompleter
+
         self._history_file = self.geekcode_dir / "input_history"
-        readline.set_history_length(500)
-        if self._history_file.exists():
-            try:
-                readline.read_history_file(str(self._history_file))
-            except (OSError, IOError):
-                pass
 
-        # Set up tab-completion for slash commands
-        def completer(text, state):
-            if text.startswith("/"):
-                matches = [c for c in self.SLASH_COMMANDS if c.startswith(text)]
-            else:
-                matches = []
-            return matches[state] if state < len(matches) else None
+        # Migrate old readline history to prompt_toolkit format if needed
+        self._migrate_history_if_needed()
 
-        readline.set_completer(completer)
-        readline.set_completer_delims("")
-        readline.parse_and_bind("tab: complete")
+        style = Style.from_dict({
+            "prompt": "bold green",
+            "completion-menu.completion": "bg:#1a1a2e #e0e0e0",
+            "completion-menu.completion.current": "bg:#16213e #00d4ff bold",
+            "completion-menu.meta.completion": "bg:#1a1a2e #888888",
+            "completion-menu.meta.completion.current": "bg:#16213e #00d4ff",
+        })
+
+        completer = GeekCodeCompleter(
+            ollama_models_fn=self._get_ollama_models,
+        )
+
+        # Re-trigger completions after backspace/delete so suggestions
+        # reappear when the user edits their input (not just on new chars)
+        kb = KeyBindings()
+
+        @kb.add("backspace")
+        def _backspace(event):
+            buf = event.current_buffer
+            buf.delete_before_cursor()
+            if buf.text.startswith("/"):
+                buf.start_completion()
+
+        @kb.add("delete")
+        def _delete(event):
+            buf = event.current_buffer
+            buf.delete()
+            if buf.text.startswith("/"):
+                buf.start_completion()
+
+        self._prompt_session = PromptSession(
+            history=FileHistory(str(self._history_file)),
+            completer=completer,
+            complete_while_typing=True,
+            key_bindings=kb,
+            style=style,
+        )
+
+    def _migrate_history_if_needed(self):
+        """One-time migration from readline to prompt_toolkit history format."""
+        if not self._history_file.exists():
+            return
+        try:
+            content = self._history_file.read_text()
+        except (OSError, IOError):
+            return
+        if not content or content.startswith("+") or content.startswith("\n+"):
+            return  # Already in prompt_toolkit format or empty
+        # Convert: each line becomes a prompt_toolkit history entry
+        lines = [line.strip() for line in content.splitlines() if line.strip()]
+        if not lines:
+            return
+        with open(self._history_file, "w") as f:
+            for line in lines:
+                f.write(f"\n+{line}\n")
 
     def _save_history(self):
-        """Persist readline history to disk."""
-        if self._readline is not None:
-            try:
-                self._readline.write_history_file(str(self._history_file))
-            except (OSError, IOError):
-                pass
+        """History is auto-persisted by prompt_toolkit's FileHistory."""
+        pass
 
     def _get_input(self) -> str:
-        """Get user input with Rich prompt prefix and readline support."""
-        console.print("[bold green]> [/bold green]", end="")
-        return input().strip()
+        """Get user input with prompt_toolkit (dropdown completions, history)."""
+        from prompt_toolkit.formatted_text import HTML
+        result = self._prompt_session.prompt(
+            HTML("<green><b>&gt; </b></green>"),
+        )
+        return result.strip()
 
     def _create_agent(self):
         """Create a fresh agent (reads all state from files)."""
@@ -442,6 +493,9 @@ class GeekCodeREPL:
                 config = yaml.safe_load(f) or {}
         current = config.get("model", "")
 
+        # Query Ollama for installed models
+        ollama_running, ollama_models = _query_ollama_models()
+
         catalog = [
             ("openai", "OpenAI", [
                 "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1", "o1-mini",
@@ -468,16 +522,27 @@ class GeekCodeREPL:
                 "google/gemini-2.0-flash-001", "deepseek/deepseek-r1",
                 "meta-llama/llama-3.3-70b-instruct",
             ]),
-            ("ollama", "Ollama (local)", [
-                "llama3", "codellama", "mistral", "phi",
-            ]),
         ]
+
+        # Add Ollama section dynamically
+        if ollama_running and ollama_models:
+            catalog.append(("ollama", "Ollama (local, running)", ollama_models))
+        elif ollama_running:
+            catalog.append(("ollama", "Ollama (running, no models pulled)", []))
+        else:
+            catalog.append(("ollama", "Ollama (not running)", []))
 
         table = Table(title="Available Models", show_lines=True, border_style="blue")
         table.add_column("Provider", style="bold cyan", width=28)
         table.add_column("Models", style="white")
 
         for prefix, label, models in catalog:
+            if not models:
+                if "not running" in label:
+                    table.add_row(label, "[dim]Start Ollama to see installed models[/dim]")
+                else:
+                    table.add_row(label, "[dim]No models pulled. Run: ollama pull llama3[/dim]")
+                continue
             model_lines = []
             for m in models:
                 display = f"{prefix}/{m}"
@@ -493,8 +558,44 @@ class GeekCodeREPL:
         console.print("[dim]Example:     /model groq/llama-3.3-70b-versatile[/dim]")
 
     def _switch_model(self, model_name: str):
-        """Switch to a different model."""
+        """Switch to a different model. Requires provider/model format."""
         import yaml
+
+        # Enforce provider/model format for ambiguous names
+        if "/" not in model_name:
+            # Allow well-known unambiguous prefixes without provider
+            unambiguous = {
+                "claude": "anthropic",
+                "gpt": "openai",
+                "o1": "openai",
+                "gemini": "google",
+            }
+            matched_provider = None
+            for prefix, provider in unambiguous.items():
+                if model_name.lower().startswith(prefix):
+                    matched_provider = provider
+                    break
+
+            if matched_provider:
+                model_name = f"{matched_provider}/{model_name}"
+                console.print(f"[dim]Using provider: {matched_provider}[/dim]")
+            else:
+                console.print("[yellow]Please use provider/model format to avoid ambiguity.[/yellow]")
+                console.print("[dim]Examples:[/dim]")
+                console.print("[dim]  /model ollama/llama3[/dim]")
+                console.print("[dim]  /model groq/llama-3.3-70b-versatile[/dim]")
+                console.print("[dim]  /model together/meta-llama/Llama-3.3-70B-Instruct-Turbo[/dim]")
+                console.print("[dim]  /model openrouter/deepseek/deepseek-r1[/dim]")
+                console.print("[dim]Run /models to see available options.[/dim]")
+                return
+
+        # Validate provider is known
+        provider = model_name.split("/", 1)[0]
+        known_providers = {"openai", "anthropic", "google", "ollama", "openrouter", "together", "groq"}
+        if provider not in known_providers:
+            console.print(f"[yellow]Unknown provider: {provider}[/yellow]")
+            console.print(f"[dim]Known providers: {', '.join(sorted(known_providers))}[/dim]")
+            return
 
         config_file = self.geekcode_dir / "config.yaml"
         config = {}

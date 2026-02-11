@@ -1,0 +1,73 @@
+# Changelog
+
+All notable changes to GeekCode will be documented in this file.
+
+Format follows [Keep a Changelog](https://keepachangelog.com/).
+
+## [Unreleased]
+
+## [1.0.6] - 2026-02-11
+
+### Fixed
+- `/models` now queries Ollama for actually installed local models instead of showing a hardcoded list
+- `/model <name>` no longer silently routes to the wrong provider — ambiguous model names now require explicit `provider/model` format
+- Provider inference (`_infer_provider`) raises clear error for ambiguous model names (llama, qwen, mixtral, etc.) instead of guessing wrong
+
+### Added
+- Real-time command suggestions via `prompt_toolkit` — dropdown appears as you type `/` with descriptions for each command
+- Model name autocompletion after `/model ` — shows dynamic Ollama models and static catalog, all in `provider/model` format
+- `prompt_toolkit` added as a core dependency
+- `CHANGELOG.md` — release notes now sourced from changelog instead of hardcoded in CI
+
+### Changed
+- Replaced `readline` tab-completion with `prompt_toolkit` `PromptSession` for the interactive REPL
+- One-time automatic migration of readline history file to prompt_toolkit format
+- GitHub Actions release workflow reads "What's Changed" from CHANGELOG.md
+
+## [1.0.5] - 2025-05-20
+
+### Fixed
+- Multi-language workspace queries now work correctly
+- Large file safety guards prevent memory issues on big files
+
+## [1.0.4] - 2025-05-19
+
+### Added
+- Workspace query layer for git status, file listing, docs, and symbol extraction
+
+## [1.0.3] - 2025-05-18
+
+### Fixed
+- `AgentConfig` missing `timeout` field
+- API key maps added for all providers
+
+## [1.0.2] - 2025-05-17
+
+### Fixed
+- Homebrew formula dependency resolution
+- Slash-command tab completion
+
+### Changed
+- CI now syncs formula to homebrew-geekcode tap repo on release
+
+## [1.0.1] - 2025-05-16
+
+### Added
+- Ollama auto-detection on first run
+- Readline history (arrow keys recall previous inputs)
+- Ctrl+C interrupt handling with graceful save
+- Startup guidelines panel after first-time setup
+
+## [1.0.0] - 2025-05-15
+
+### Added
+- Initial release — filesystem-driven AI agent for knowledge work
+- Interactive REPL with slash commands (`/help`, `/models`, `/model`, `/status`, `/history`, etc.)
+- Provider support: OpenAI, Anthropic, Google, Ollama, OpenRouter, Together AI, Groq
+- PyInstaller binary builds for macOS ARM64, Linux x64, Windows x64
+- Homebrew formula with automatic tap updates
+- MCPorter tool integration (MCP-to-CLI bridge)
+- Benchmark suite (80 tasks across coding, finance, healthcare, general domains)
+- Coding loop (edit-test-iterate) with checkpoint/resume
+- Response caching with token savings tracking
+- File context indexing and chunking

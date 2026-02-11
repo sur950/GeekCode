@@ -91,6 +91,30 @@ jobs:
           cd release-assets
           sha256sum * > checksums-sha256.txt
 
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VER="${{ steps.version.outputs.VERSION }}"
+
+          # Extract the section for this version from CHANGELOG.md
+          # Matches from "## [X.Y.Z]" to the next "## [" or end of file
+          CHANGELOG_NOTES=$(awk -v ver="$VER" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]")) found=1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md)
+
+          # If no changelog entry found, use a fallback
+          if [ -z "$CHANGELOG_NOTES" ]; then
+            CHANGELOG_NOTES="Release v${VER}"
+          fi
+
+          # Write to file to preserve newlines (heredoc in env vars can break)
+          echo "$CHANGELOG_NOTES" > /tmp/changelog_notes.md
+
       - name: Create or update GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -98,7 +122,15 @@ jobs:
           TAG="${{ github.ref_name }}"
           VER="${{ steps.version.outputs.VERSION }}"
 
-          NOTES="## GeekCode v${VER}
+          # Build release notes: changelog + install/uninstall instructions
+          cat > /tmp/release_notes.md << ENDOFNOTES
+          ## GeekCode v${VER}
+
+          ### What's Changed
+
+          $(cat /tmp/changelog_notes.md)
+
+          ---
 
           ### Installation
 
@@ -126,7 +158,7 @@ jobs:
           \`\`\`bash
           pip install geekcode
           \`\`\`
-          
+
           ---
 
           ### Uninstall
@@ -140,8 +172,8 @@ jobs:
           **macOS / Linux (Direct Binary):**
           \`\`\`bash
           sudo rm -f /usr/local/bin/geekcode
-          // or if installed to custom location:
-          sudo rm -f $(which geekcode)
+          # or if installed to custom location:
+          rm -f \$(which geekcode)
           \`\`\`
 
           **Windows (Winget):**
@@ -157,7 +189,8 @@ jobs:
           To remove project-level data:
           \`\`\`bash
           rm -rf .geekcode
-          \`\`\`"
+          \`\`\`
+          ENDOFNOTES
 
           # If release already exists, upload assets to it; otherwise create new
           if gh release view "$TAG" &>/dev/null; then
@@ -166,7 +199,7 @@ jobs:
           else
             gh release create "$TAG" \
               --title "GeekCode v${VER}" \
-              --notes "$NOTES" \
+              --notes-file /tmp/release_notes.md \
               release-assets/*
           fi
 

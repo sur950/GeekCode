@@ -318,7 +318,19 @@ class OllamaProvider(Provider):
             },
             timeout=self.config.merged.agent.timeout,
         )
-        response.raise_for_status()
+
+        if response.status_code != 200:
+            try:
+                err = response.json().get("error", response.text)
+            except Exception:
+                err = response.text
+            model_name = self.model.split("/")[-1]
+            raise RuntimeError(
+                f"Ollama error for model '{model_name}': {err}\n"
+                f"Check that the model is pulled (`ollama pull {model_name}`) "
+                f"and Ollama is healthy (`ollama list`)."
+            )
+
         data = response.json()
 
         return ProviderResponse(
@@ -500,24 +512,32 @@ class ProviderFactory:
 
     @classmethod
     def _infer_provider(cls, model: str) -> str:
-        """Infer the provider from the model name."""
+        """Infer the provider from the model name.
+
+        Only infers for unambiguous model names (unique to one provider).
+        Raises ValueError for ambiguous names that exist on multiple providers.
+        """
         model_lower = model.lower()
 
+        # Unambiguous: these model prefixes are unique to one provider
         if model_lower.startswith("gpt") or model_lower.startswith("o1"):
             return "openai"
         elif model_lower.startswith("claude"):
             return "anthropic"
         elif model_lower.startswith("gemini"):
             return "google"
-        elif model_lower.startswith("llama") or model_lower.startswith("deepseek"):
-            return "groq"
-        elif model_lower.startswith("mixtral") or model_lower.startswith("qwen"):
-            return "together"
-        elif model_lower in ("codellama", "phi", "phi-2"):
-            return "ollama"
 
-        # Default to openrouter (broadest model catalog)
-        return "openrouter"
+        # Ambiguous: these models exist on multiple providers (ollama, groq,
+        # together, openrouter). Require explicit provider prefix.
+        raise ValueError(
+            f"Ambiguous model name: '{model}'. This model is available on "
+            f"multiple providers.\n"
+            f"Please use provider/model format, e.g.:\n"
+            f"  ollama/{model}\n"
+            f"  groq/{model}\n"
+            f"  together/{model}\n"
+            f"  openrouter/{model}"
+        )
 
     @classmethod
     def available_providers(cls) -> List[str]:

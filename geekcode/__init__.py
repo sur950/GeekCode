@@ -17,8 +17,8 @@ Architecture:
 - Zero CLI memory, full filesystem persistence
 """
 
-__version__ = "1.0.5"
-__author__ = "GeekCode Team"
+__version__ = "1.0.6"
+__author__ = "Suresh Konakanchi"
 __license__ = "Apache-2.0"
 
 from geekcode.core.agent import Agent, TaskResult
