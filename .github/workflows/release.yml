@@ -91,13 +91,14 @@ jobs:
           cd release-assets
           sha256sum * > checksums-sha256.txt
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --title "GeekCode v${{ steps.version.outputs.VERSION }}" \
-            --notes "## GeekCode v${{ steps.version.outputs.VERSION }}
+          TAG="${{ github.ref_name }}"
+          VER="${{ steps.version.outputs.VERSION }}"
+
+          NOTES="## GeekCode v${VER}
 
           ### Installation
 
@@ -108,12 +109,12 @@ jobs:
 
           **macOS (direct download — Apple Silicon):**
           \`\`\`bash
-          curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+          curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${VER}/geekcode-macos-arm64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
           \`\`\`
 
           **Linux:**
           \`\`\`bash
-          curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${{ steps.version.outputs.VERSION }}/geekcode-linux-x64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
+          curl -fsSL https://github.com/sur950/GeekCode/releases/download/v${VER}/geekcode-linux-x64 -o /usr/local/bin/geekcode && chmod +x /usr/local/bin/geekcode
           \`\`\`
 
           **Windows (Winget):**
@@ -124,8 +125,18 @@ jobs:
           **pip:**
           \`\`\`bash
           pip install geekcode
-          \`\`\`" \
-            release-assets/*
+          \`\`\`"
+
+          # If release already exists, upload assets to it; otherwise create new
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG already exists — uploading assets..."
+            gh release upload "$TAG" release-assets/* --clobber
+          else
+            gh release create "$TAG" \
+              --title "GeekCode v${VER}" \
+              --notes "$NOTES" \
+              release-assets/*
+          fi
 
   update-homebrew:
     needs: release
