@@ -36,11 +36,11 @@
 <circle cx="330.0" cy="250.0" r="4" fill="#0EA5E9"/>
 <circle cx="330.0" cy="250.0" r="4" fill="#0EA5E9"/>
 <circle cx="330.0" cy="250.0" r="4" fill="#0EA5E9"/>
-<polygon points="330.0,104.7 460.4,250.0 330.0,373.6 199.1,250.0" fill="#6C63FF" fill-opacity="0.15" stroke="#6C63FF" stroke-width="2.5"/>
-<circle cx="330.0" cy="104.7" r="4" fill="#6C63FF"/>
-<circle cx="460.4" cy="250.0" r="4" fill="#6C63FF"/>
-<circle cx="330.0" cy="373.6" r="4" fill="#6C63FF"/>
-<circle cx="199.1" cy="250.0" r="4" fill="#6C63FF"/>
+<polygon points="330.0,101.2 465.5,250.0 330.0,377.0 192.3,250.0" fill="#6C63FF" fill-opacity="0.15" stroke="#6C63FF" stroke-width="2.5"/>
+<circle cx="330.0" cy="101.2" r="4" fill="#6C63FF"/>
+<circle cx="465.5" cy="250.0" r="4" fill="#6C63FF"/>
+<circle cx="330.0" cy="377.0" r="4" fill="#6C63FF"/>
+<circle cx="192.3" cy="250.0" r="4" fill="#6C63FF"/>
 <polygon points="330.0,250.0 445.1,250.0 330.0,360.2 212.7,250.0" fill="#F59E0B" fill-opacity="0.15" stroke="#F59E0B" stroke-width="2.5"/>
 <circle cx="330.0" cy="250.0" r="4" fill="#F59E0B"/>
 <circle cx="445.1" cy="250.0" r="4" fill="#F59E0B"/>

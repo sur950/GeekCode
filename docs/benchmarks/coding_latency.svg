@@ -10,6 +10,6 @@
 <rect x="120" y="151.0" width="330.0" height="31.7" rx="4" fill="#0EA5E9"/>
 <text x="456" y="171" font-size="12" font-weight="bold" fill="#0EA5E9">13.8s</text>
 <text x="112" y="220" text-anchor="end" font-size="12" fill="#475569">GeekCode</text>
-<rect x="120" y="199.8" width="304.3" height="31.7" rx="4" fill="#6C63FF"/>
-<text x="430" y="220" font-size="12" font-weight="bold" fill="#6C63FF">12.7s</text>
+<rect x="120" y="199.8" width="316.3" height="31.7" rx="4" fill="#6C63FF"/>
+<text x="442" y="220" font-size="12" font-weight="bold" fill="#6C63FF">13.2s</text>
 </svg>
