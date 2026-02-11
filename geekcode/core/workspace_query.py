@@ -22,20 +22,47 @@ from typing import Dict, List, Optional, Tuple
 # ── Ignore patterns (never read these) ────────────────────────────────────────
 
 _IGNORE_DIRS = {
-    ".git", ".hg", ".svn", "node_modules", "__pycache__", ".tox",
-    ".mypy_cache", ".pytest_cache", "dist", "build", ".eggs",
-    "venv", ".venv", "env", ".env", ".geekcode",
+    # VCS
+    ".git", ".hg", ".svn",
+    # Python
+    "__pycache__", ".tox", ".mypy_cache", ".pytest_cache", ".eggs",
+    "venv", ".venv", "env", ".env",
+    # JS / Node
+    "node_modules", ".next", ".nuxt", ".turbo", "bower_components",
+    # Build output (multi-lang)
+    "dist", "build", "out", "bin", "obj", "target", "release", "debug",
+    # JVM
+    ".gradle", ".m2", ".ivy2",
+    # iOS / macOS
+    "Pods", ".build", "DerivedData",
+    # Go / PHP / Ruby
+    "vendor",
+    # Misc
+    ".geekcode", "coverage", ".coverage", ".nyc_output",
 }
 
 _IGNORE_EXTS = {
-    ".pyc", ".pyo", ".so", ".dylib", ".dll", ".exe",
-    ".whl", ".egg", ".tar", ".gz", ".zip", ".jar",
-    ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg",
-    ".woff", ".woff2", ".ttf", ".eot",
-    ".lock", ".min.js", ".min.css",
+    # Compiled / binary
+    ".pyc", ".pyo", ".so", ".dylib", ".dll", ".exe", ".o", ".a", ".lib",
+    ".class", ".dex",
+    # Archives
+    ".whl", ".egg", ".tar", ".gz", ".zip", ".jar", ".war", ".aar",
+    ".tgz", ".bz2", ".xz", ".rar", ".7z",
+    # Images
+    ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".bmp", ".webp",
+    # Fonts
+    ".woff", ".woff2", ".ttf", ".eot", ".otf",
+    # Minified / generated
+    ".lock", ".min.js", ".min.css", ".map",
+    # Data blobs
+    ".sqlite", ".db", ".bin", ".dat", ".pkl", ".npy", ".npz",
+    # Media
+    ".mp3", ".mp4", ".mov", ".avi", ".wav", ".pdf",
 }
 
-_MAX_FILE_SIZE = 50_000  # 50 KB
+_MAX_FILE_SIZE = 50_000       # 50 KB — skip files larger than this in walk/search
+_MAX_DOC_SIZE = 2_000_000     # 2 MB — docs can be larger; we'll read a snippet
+_MAX_READ_SIZE = 500_000      # 500 KB — hard cap on bytes read from any single file
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -168,14 +195,45 @@ _SHELL_PATTERNS: List[Tuple[re.Pattern, str, List[str]]] = [
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Regex to extract file references from the user's task
+# Covers: Python, JS/TS, Go, Rust, Java/Kotlin/Scala, C/C++/C#, Swift, Ruby,
+# PHP, Dart, Elixir, Lua, R, Zig, Nim, Haskell, Perl, Shell, configs, markup
+_FILE_REF_EXTS = (
+    # Core languages
+    r"py|js|ts|tsx|jsx|mjs|cjs|go|rs|java|kt|kts|scala|sbt"
+    r"|c|cpp|cc|cxx|h|hpp|hxx|cs|fs|fsx"
+    r"|swift|m|mm"                          # Apple
+    r"|rb|erb"                              # Ruby
+    r"|php|phtml"                           # PHP
+    r"|dart"                                # Dart
+    r"|ex|exs|erl|hrl"                      # Elixir / Erlang
+    r"|lua|r|R|jl"                          # Lua, R, Julia
+    r"|zig|nim|v|hx"                        # Zig, Nim, V, Haxe
+    r"|hs|lhs|ml|mli|clj|cljs|cljc|edn"    # Haskell, OCaml, Clojure
+    r"|pl|pm|p6|raku"                       # Perl
+    r"|sh|bash|zsh|fish|ps1|psm1|bat|cmd"   # Shell / PowerShell
+    # Config / data
+    r"|yaml|yml|json|toml|xml|ini|cfg|conf|env|properties"
+    # Markup / style
+    r"|html|htm|css|scss|less|sass|vue|svelte|astro"
+    # Other
+    r"|sql|graphql|gql|proto|tf|hcl|dockerfile|cmake"
+    r"|md|txt|rst|adoc|tex"
+)
 _FILE_REF = re.compile(
-    r"(?:in|from|file|at|of|the)\s+[`'\"]?(\w[\w./\\-]+\.(?:py|js|ts|tsx|jsx|go|rs|java|rb|c|cpp|h|yaml|yml|json|toml|md|txt|cfg|ini|sh|bash|html|css|sql))[`'\"]?",
+    rf"(?:in|from|file|at|of|the)\s+[`'\"]?(\w[\w./\\-]+\.(?:{_FILE_REF_EXTS}))[`'\"]?",
     re.IGNORECASE,
 )
 
 # Regex to extract function / class / variable names the user might be asking about
+# Keywords across languages: Python def/class, JS/TS function/const/let/var/type/interface,
+# Go func/type/struct/interface, Rust fn/struct/enum/trait/impl, Java/Kotlin class/fun/val/object,
+# Scala def/val/object/trait/case, Swift func/class/struct/protocol/extension,
+# C# class/struct/interface/record, PHP class/function/trait, Dart class/mixin,
+# Elixir def/defp/defmodule, Ruby def/class/module
 _SYMBOL_REF = re.compile(
-    r"(?:function|method|class|def|fn|func|variable|const|var|let|type|interface|struct|enum)\s+[`'\"]?(\w+)[`'\"]?",
+    r"(?:function|method|class|def|defp|defmodule|fn|func|fun|sub|val|object|trait|impl|"
+    r"protocol|extension|mixin|record|module|package|"
+    r"variable|const|var|let|type|interface|struct|enum)\s+[`'\"]?(\w+)[`'\"]?",
     re.IGNORECASE,
 )
 
@@ -235,11 +293,36 @@ def find_files_by_symbol(task: str, workspace: Path) -> List[Tuple[Path, str]]:
 
     results = []
     project_files = _walk_project_files(workspace, max_files=2000)
-    code_exts = {".py", ".js", ".ts", ".tsx", ".jsx", ".go", ".rs", ".java", ".rb", ".c", ".cpp", ".h"}
+    code_exts = {
+        # Python
+        ".py",
+        # JS / TS
+        ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs", ".vue", ".svelte",
+        # Systems
+        ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".hxx", ".zig", ".nim", ".v",
+        # JVM
+        ".java", ".kt", ".kts", ".scala",
+        # .NET
+        ".cs", ".fs", ".fsx",
+        # Apple
+        ".swift", ".m", ".mm",
+        # Scripting
+        ".rb", ".php", ".lua", ".pl", ".pm", ".r", ".R", ".jl",
+        # Dart / Elixir / Erlang
+        ".dart", ".ex", ".exs", ".erl",
+        # Functional
+        ".hs", ".ml", ".mli", ".clj", ".cljs",
+        # Haxe
+        ".hx",
+    }
 
     for sym in symbols[:3]:  # Cap at 3 symbols to avoid slowness
         pattern = re.compile(
-            rf"\b(def|class|function|func|fn|const|let|var|type|interface|struct|enum)\s+{re.escape(sym)}\b"
+            rf"\b(def|defp|defmodule|class|data\s+class|case\s+class|object|"
+            rf"function|func|fun|fn|pub\s+fn|sub|"
+            rf"val|var|const|let|"
+            rf"type|interface|struct|enum|trait|impl|"
+            rf"protocol|extension|mixin|record|module|package)\s+{re.escape(sym)}\b"
         )
         for p in project_files:
             if p.suffix.lower() not in code_exts:
@@ -396,9 +479,32 @@ def run_query(command: List[str], workspace: Path, timeout: int = 10) -> str:
 
 
 def _read_file_snippet(path: Path, max_lines: int = 80) -> str:
-    """Read a file, truncating to max_lines if large."""
+    """Read a file, truncating to max_lines if large.
+
+    Safety: never reads more than _MAX_READ_SIZE bytes into memory, even for
+    multi-hundred-MB assets.  Binary files are detected and skipped.
+    """
     try:
+        size = path.stat().st_size
+        if size > _MAX_READ_SIZE:
+            # Read only the head; don't load the whole file
+            with open(path, "r", errors="ignore") as f:
+                head = f.read(_MAX_READ_SIZE)
+            lines = head.split("\n")
+            head_lines = lines[:40]
+            return "\n".join(
+                head_lines
+                + [f"... (file is {size / 1_000_000:.1f} MB — showing first {len(head_lines)} lines) ..."]
+            )
+
         content = path.read_text(errors="ignore")
+
+        # Quick binary check: if more than 10% of the first 1024 bytes are
+        # non-text, treat as binary.
+        sample = content[:1024]
+        if sample and sum(1 for c in sample if c == "\x00") > len(sample) * 0.1:
+            return f"(binary file, {size / 1_000:.0f} KB — skipped)"
+
         lines = content.split("\n")
         if len(lines) <= max_lines:
             return content
