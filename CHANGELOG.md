@@ -45,24 +45,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - One-time automatic migration of readline history file to prompt_toolkit format
 - GitHub Actions release workflow reads "What's Changed" from CHANGELOG.md
 
-## [1.0.5] - 2025-05-20
+## [1.0.5] - 2026-01-21
 
 ### Fixed
 - Multi-language workspace queries now work correctly
 - Large file safety guards prevent memory issues on big files
 
-## [1.0.4] - 2025-05-19
+## [1.0.4] - 2025-12-19
 
 ### Added
 - Workspace query layer for git status, file listing, docs, and symbol extraction
 
-## [1.0.3] - 2025-05-18
+## [1.0.3] - 2025-12-18
 
 ### Fixed
 - `AgentConfig` missing `timeout` field
 - API key maps added for all providers
 
-## [1.0.2] - 2025-05-17
+## [1.0.2] - 2025-12-17
 
 ### Fixed
 - Homebrew formula dependency resolution
@@ -71,7 +71,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 - CI now syncs formula to homebrew-geekcode tap repo on release
 
-## [1.0.1] - 2025-05-16
+## [1.0.1] - 2025-11-16
 
 ### Added
 - Ollama auto-detection on first run
@@ -79,7 +79,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - Ctrl+C interrupt handling with graceful save
 - Startup guidelines panel after first-time setup
 
-## [1.0.0] - 2025-05-15
+## [1.0.0] - 2025-11-15
 
 ### Added
 - Initial release — filesystem-driven AI agent for knowledge work
