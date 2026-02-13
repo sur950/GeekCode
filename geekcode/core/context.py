@@ -154,6 +154,28 @@ class ContextEngine:
 
         return changed
 
+    def index_workspace(self, workspace: Path, max_files: int = 500) -> int:
+        """Index workspace files for chunk-based search.
+
+        Reuses _walk_project_files() from workspace_query to get eligible files.
+        Skips files already indexed with the same hash (incremental).
+
+        Returns count of files indexed (new or re-indexed).
+        """
+        from geekcode.core.workspace_query import _walk_project_files
+
+        files = _walk_project_files(workspace, max_files=max_files)
+        indexed_count = 0
+
+        for file_path in files:
+            try:
+                if self.add_file(str(file_path)):
+                    indexed_count += 1
+            except Exception:
+                continue
+
+        return indexed_count
+
     def clear(self) -> None:
         """Clear all indexed content."""
         # Clear chunks
@@ -161,8 +183,8 @@ class ContextEngine:
             chunk_file.unlink()
 
         # Clear index
-        if self.index_file.exists():
-            self.index_file.unlink()
+        if self._index_path.exists():
+            self._index_path.unlink()
 
     def _chunk_content(self, content: str, source: str) -> List[str]:
         """Split content into chunks."""

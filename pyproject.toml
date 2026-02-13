@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geekcode"
-version = "1.0.6"
+version = "1.0.7"
 description = "A resumable, filesystem-driven AI agent for knowledge work across Coding, Finance, Healthcare, and Research domains"
 readme = "README.md"
 license = {text = "Apache-2.0"}

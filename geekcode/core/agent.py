@@ -70,6 +70,48 @@ class Agent:
 
         return Path.cwd()
 
+    def _ensure_indexed(self) -> None:
+        """Ensure workspace files are indexed for chunk-based search.
+
+        Uses a lightweight timestamp check to avoid re-walking on every prompt.
+        Only re-indexes if last index was more than 60 seconds ago.
+        """
+        meta_path = self.geekcode_dir / "context" / "meta.yaml"
+        now = datetime.utcnow()
+
+        # Check if we indexed recently (within 60 seconds)
+        if meta_path.exists():
+            try:
+                with open(meta_path) as f:
+                    meta = yaml.safe_load(f) or {}
+                last_indexed = meta.get("last_indexed")
+                if last_indexed:
+                    last_time = datetime.fromisoformat(last_indexed)
+                    if (now - last_time).total_seconds() < 60:
+                        return
+            except Exception:
+                pass
+
+        # Run incremental indexing
+        from geekcode.core.context import ContextEngine
+
+        context_dir = self.geekcode_dir / "context"
+        context_dir.mkdir(parents=True, exist_ok=True)
+        engine = ContextEngine(context_dir)
+        engine.index_workspace(self.workspace, max_files=500)
+
+        # Update last-indexed timestamp
+        try:
+            meta = {}
+            if meta_path.exists():
+                with open(meta_path) as f:
+                    meta = yaml.safe_load(f) or {}
+            meta["last_indexed"] = now.isoformat()
+            with open(meta_path, "w") as f:
+                yaml.dump(meta, f, default_flow_style=False)
+        except Exception:
+            pass
+
     def run(self, task: str, files: Optional[List[str]] = None) -> TaskResult:
         """
         Execute a task. Fully filesystem-driven.
@@ -83,6 +125,9 @@ class Agent:
         6. Save all state to files
         7. Return result (nothing kept in memory)
         """
+        # === INDEX PHASE: Ensure workspace files are indexed ===
+        self._ensure_indexed()
+
         # === READ PHASE: Load everything from files ===
         state = self._read_state()
         config = self._read_config()
@@ -321,14 +366,21 @@ class Agent:
         """Build context by reading from indexed files and live workspace data."""
         context_parts = []
 
-        # 1. Gather live workspace data (git log, status, etc.)
+        # 1. ALWAYS include project summary (file tree + README + tech stack)
+        from geekcode.core.workspace_query import build_project_summary
+
+        project_summary = build_project_summary(self.workspace)
+        if project_summary:
+            context_parts.append(f"## Project Overview\n{project_summary}")
+
+        # 2. Gather live workspace data (git log, status, etc.)
         from geekcode.core.workspace_query import gather_workspace_context
 
         live_context = gather_workspace_context(task, self.workspace)
         if live_context:
             context_parts.append(f"## Live Workspace Data\n{live_context}")
 
-        # 2. File-based context
+        # 3. File-based context
         if files:
             for file_path in files:
                 path = Path(file_path)
@@ -339,9 +391,9 @@ class Agent:
                         content = self._summarize_content(content)
                     context_parts.append(f"## {file_path}\n{content}")
         else:
-            # Search indexed chunks
+            # Search indexed chunks (now actually populated)
             chunks = self._search_indexed_chunks(task)
-            for chunk in chunks[:3]:
+            for chunk in chunks[:5]:
                 context_parts.append(f"## {chunk['source']}\n{chunk['content']}")
 
         return "\n\n".join(context_parts)
@@ -415,12 +467,14 @@ class Agent:
         # Add task
         parts.append(f"\n## Current Task\n{task}")
         parts.append(
-            "\nRespond concisely and directly. "
+            "\nYou are an AI assistant with full access to this project's codebase. "
+            "The project file tree and README are provided above — use them to understand "
+            "the project structure and answer questions accurately. "
+            "When asked about the codebase, reference specific files and paths. "
+            "Respond concisely and directly. "
             "If workspace data or file contents are provided above, use them "
             "to answer the question directly — do NOT tell the user to run "
-            "commands or open files themselves. "
-            "If code files are included, analyze them to answer questions. "
-            "If documents are included, extract the relevant information."
+            "commands or open files themselves."
         )
 
         return "\n".join(parts)

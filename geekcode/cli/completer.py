@@ -25,6 +25,7 @@ SLASH_COMMANDS = [
     ("/loop", "Show coding loop status"),
     ("/loop resume", "Resume interrupted loop"),
     ("/loop reset", "Clear loop checkpoint"),
+    ("/reindex", "Re-index workspace files"),
     ("/newchat", "Start fresh conversation"),
     ("/clear", "Clear screen"),
     ("/reset", "Reset task state"),

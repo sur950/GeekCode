@@ -12,6 +12,7 @@ the prompt.  Only read-only operations are performed; nothing is modified.
 """
 
 import fnmatch
+import hashlib
 import os
 import re
 import subprocess
@@ -433,6 +434,243 @@ def find_relevant_docs(task: str, workspace: Path) -> List[Path]:
             seen.add(p)
             unique.append(p)
     return unique[:2]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  4. Project summary — always-on baseline context
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_TECH_STACK_FILES = {
+    "package.json": "Node.js",
+    "pyproject.toml": "Python",
+    "setup.py": "Python",
+    "setup.cfg": "Python",
+    "requirements.txt": "Python",
+    "go.mod": "Go",
+    "Cargo.toml": "Rust",
+    "pom.xml": "Java",
+    "build.gradle": "Java/Kotlin",
+    "build.gradle.kts": "Kotlin",
+    "Gemfile": "Ruby",
+    "composer.json": "PHP",
+    "pubspec.yaml": "Dart/Flutter",
+    "mix.exs": "Elixir",
+}
+
+_TECH_STACK_GLOBS = {
+    "*.sln": ".NET",
+    "*.csproj": ".NET",
+}
+
+
+def _detect_tech_stack(workspace: Path) -> str:
+    """Detect tech stack from config files in the workspace root."""
+    detected = []
+
+    for filename, lang in _TECH_STACK_FILES.items():
+        config_path = workspace / filename
+        if not config_path.exists():
+            continue
+
+        info = lang
+        try:
+            content = config_path.read_text(errors="ignore")
+            if filename == "package.json":
+                import json
+                data = json.loads(content)
+                name = data.get("name", "")
+                deps = list(data.get("dependencies", {}).keys())[:10]
+                if name:
+                    info += f" ({name})"
+                if deps:
+                    info += f", deps: {', '.join(deps)}"
+            elif filename == "pyproject.toml":
+                # Extract project name and dependencies
+                name_match = re.search(r'^name\s*=\s*"([^"]+)"', content, re.MULTILINE)
+                if name_match:
+                    info += f" ({name_match.group(1)})"
+                # Look for dependencies list
+                dep_matches = re.findall(r'"([a-zA-Z][\w-]*)(?:[><=!].*?)?"', content)
+                if dep_matches:
+                    info += f", deps: {', '.join(dep_matches[:10])}"
+            elif filename == "requirements.txt":
+                lines = [l.strip().split("==")[0].split(">=")[0].split("<=")[0].split(">")[0].split("<")[0].strip()
+                         for l in content.splitlines() if l.strip() and not l.startswith("#")]
+                if lines:
+                    info += f", deps: {', '.join(lines[:10])}"
+            elif filename == "go.mod":
+                mod_match = re.search(r'^module\s+(\S+)', content, re.MULTILINE)
+                if mod_match:
+                    info += f" ({mod_match.group(1)})"
+            elif filename == "Cargo.toml":
+                name_match = re.search(r'^name\s*=\s*"([^"]+)"', content, re.MULTILINE)
+                if name_match:
+                    info += f" ({name_match.group(1)})"
+        except Exception:
+            pass
+
+        detected.append(info)
+
+    # Check glob patterns (.sln, .csproj)
+    for pattern, lang in _TECH_STACK_GLOBS.items():
+        if any(workspace.glob(pattern)):
+            detected.append(lang)
+
+    if not detected:
+        return ""
+    return "Tech stack: " + "; ".join(detected)
+
+
+def _build_file_tree(workspace: Path) -> str:
+    """Build a compact file tree for the project summary.
+
+    For projects with ≤300 files, list all files.
+    For larger projects, show directory structure with file counts.
+    """
+    # Try git ls-files first (respects .gitignore)
+    file_list = []
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(workspace),
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            file_list = [l for l in result.stdout.strip().splitlines() if l.strip()]
+    except Exception:
+        pass
+
+    # Fallback to walking the project
+    if not file_list:
+        walked = _walk_project_files(workspace, max_files=2000)
+        file_list = []
+        for p in walked:
+            try:
+                file_list.append(str(p.relative_to(workspace)))
+            except ValueError:
+                file_list.append(str(p))
+
+    if not file_list:
+        return "(no files found)"
+
+    # Small projects: list all files
+    if len(file_list) <= 300:
+        tree = "\n".join(sorted(file_list))
+        # Cap output at ~8KB
+        if len(tree) > 8000:
+            lines = tree.split("\n")
+            tree = "\n".join(lines[:200]) + f"\n... ({len(lines) - 200} more files)"
+        return tree
+
+    # Large projects: show directory structure with file counts
+    dir_counts: Dict[str, int] = {}
+    top_files = []
+    for f in file_list:
+        parts = f.split("/")
+        if len(parts) == 1:
+            top_files.append(f)
+        else:
+            # Group by top-level and second-level directory
+            key = "/".join(parts[:2]) + "/" if len(parts) > 2 else "/".join(parts[:1]) + "/"
+            dir_counts[key] = dir_counts.get(key, 0) + 1
+
+    lines = []
+    for f in sorted(top_files):
+        lines.append(f)
+    for d in sorted(dir_counts.keys()):
+        lines.append(f"{d} ({dir_counts[d]} files)")
+
+    tree = "\n".join(lines)
+    if len(tree) > 8000:
+        lines = tree.split("\n")
+        tree = "\n".join(lines[:200]) + f"\n... ({len(lines) - 200} more entries)"
+    return tree
+
+
+def _get_file_list_hash(workspace: Path) -> str:
+    """Get a hash of the file listing for cache invalidation."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(workspace),
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return hashlib.sha256(result.stdout.encode()).hexdigest()[:16]
+    except Exception:
+        pass
+
+    # Fallback: hash the walked file list
+    walked = _walk_project_files(workspace, max_files=2000)
+    listing = "\n".join(sorted(str(p) for p in walked))
+    return hashlib.sha256(listing.encode()).hexdigest()[:16]
+
+
+def build_project_summary(workspace: Path) -> str:
+    """Build an always-on baseline project summary.
+
+    Returns a formatted string with:
+    - File tree (compact)
+    - README snippet (first 80 lines)
+    - Tech stack detection
+
+    Results are cached in .geekcode/context/project_summary.txt and
+    regenerated only when the file listing hash changes.
+    """
+    geekcode_dir = workspace / ".geekcode"
+    context_dir = geekcode_dir / "context"
+    cache_file = context_dir / "project_summary.txt"
+    hash_file = context_dir / "project_summary_hash.txt"
+
+    # Check cache validity
+    current_hash = _get_file_list_hash(workspace)
+    if cache_file.exists() and hash_file.exists():
+        try:
+            cached_hash = hash_file.read_text().strip()
+            if cached_hash == current_hash:
+                return cache_file.read_text()
+        except Exception:
+            pass
+
+    # Build fresh summary
+    parts = []
+
+    # a) File tree
+    file_tree = _build_file_tree(workspace)
+    if file_tree:
+        parts.append(f"### File Tree\n```\n{file_tree}\n```")
+
+    # b) README snippet
+    for readme_name in ("README.md", "README", "README.rst", "README.txt", "readme.md"):
+        readme_path = workspace / readme_name
+        if readme_path.exists() and readme_path.is_file():
+            try:
+                content = readme_path.read_text(errors="ignore")
+                lines = content.split("\n")
+                snippet = "\n".join(lines[:80])
+                if len(lines) > 80:
+                    snippet += f"\n... ({len(lines) - 80} more lines)"
+                parts.append(f"### README ({readme_name})\n```\n{snippet}\n```")
+            except Exception:
+                pass
+            break
+
+    # c) Tech stack
+    tech = _detect_tech_stack(workspace)
+    if tech:
+        parts.append(f"### {tech}")
+
+    summary = "\n\n".join(parts)
+
+    # Cache the result
+    try:
+        context_dir.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(summary)
+        hash_file.write_text(current_hash)
+    except Exception:
+        pass
+
+    return summary
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

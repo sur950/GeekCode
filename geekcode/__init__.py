@@ -17,7 +17,7 @@ Architecture:
 - Zero CLI memory, full filesystem persistence
 """
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "Suresh Konakanchi"
 __license__ = "Apache-2.0"
 

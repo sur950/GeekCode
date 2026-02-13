@@ -6,6 +6,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-02-12
+
+### Fixed
+- `ContextEngine.clear()` crashed with `AttributeError` — referenced non-existent `self.index_file` instead of `self._index_path`
+- `ContextEngine` was dead code — `add_file()` existed but was never called, leaving `.geekcode/context/chunks/` always empty
+- Generic questions like "how does auth work?" returned zero project context because `gather_workspace_context()` only triggered on specific regex patterns
+
+### Added
+- **Always-on project summary** — every prompt now includes the file tree, README snippet (first 80 lines), and detected tech stack, so the model understands the project without regex-matched queries
+- `build_project_summary()` in `workspace_query.py` — cached baseline context with hash-based invalidation
+- **Auto-indexing** — workspace files are incrementally indexed on every task run (60-second cooldown), populating chunks for keyword search
+- `index_workspace()` method on `ContextEngine` — walks project files and indexes up to 500 files incrementally
+- `/reindex` slash command — force re-index of workspace files with autocomplete support
+- First-run indexing — `.geekcode/` initialization now indexes workspace files with progress output
+- Tech stack detection for 13+ ecosystems: Node.js, Python, Go, Rust, Java/Kotlin, Ruby, PHP, Dart/Flutter, Elixir, .NET — with dependency extraction from config files
+
+### Changed
+- `_build_context_from_files()` now always prepends project overview before live workspace data and chunk search
+- System prompt updated to tell the model it has full project access and should reference specific files/paths
+- Chunk search now returns top 5 results (was 3)
+
 ## [1.0.6] - 2026-02-11
 
 ### Fixed

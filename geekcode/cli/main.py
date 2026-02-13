@@ -221,6 +221,16 @@ def ensure_initialized(workspace: Path, interactive: bool = True) -> Path:
         with open(geekcode_dir / "state.yaml", "w") as f:
             yaml.dump({"status": "idle"}, f)
 
+        # Index workspace files on first run
+        console.print("[dim]Indexing workspace files...[/dim]")
+        try:
+            from geekcode.core.context import ContextEngine
+            context_engine = ContextEngine(geekcode_dir / "context")
+            count = context_engine.index_workspace(workspace)
+            console.print(f"[dim]Indexed {count} files[/dim]")
+        except Exception as e:
+            console.print(f"[dim]Indexing skipped: {e}[/dim]")
+
         console.print(f"[dim]Initialized .geekcode/ in {workspace}[/dim]\n")
 
         if interactive and sys.stdin.isatty():
@@ -393,6 +403,7 @@ class GeekCodeREPL:
   /loop                    Show coding loop status
   /loop resume             Resume interrupted coding loop
   /loop reset              Clear coding loop checkpoint
+  /reindex                 Re-index workspace files for context
   /newchat                 Start fresh conversation (clear context)
   /clear                   Clear screen
   /reset                   Reset task state
@@ -624,6 +635,23 @@ class GeekCodeREPL:
             conv_file.unlink()
         console.print("[green]Started new conversation[/green]")
 
+    def _reindex_workspace(self):
+        """Force re-index of the workspace."""
+        from geekcode.core.context import ContextEngine
+
+        console.print("[blue]Re-indexing workspace...[/blue]")
+        try:
+            context_engine = ContextEngine(self.geekcode_dir / "context")
+            context_engine.clear()
+            count = context_engine.index_workspace(self.workspace)
+            # Also invalidate the project summary cache
+            summary_hash = self.geekcode_dir / "context" / "project_summary_hash.txt"
+            if summary_hash.exists():
+                summary_hash.unlink()
+            console.print(f"[green]Re-indexed {count} files[/green]")
+        except Exception as e:
+            console.print(f"[red]Re-index error: {e}[/red]")
+
     def _save_paused_state(self, task: str):
         """Save paused state so the task can be resumed later."""
         import yaml
@@ -718,6 +746,9 @@ class GeekCodeREPL:
         elif command == "/loop":
             self._handle_loop(args)
 
+        elif command == "/reindex":
+            self._reindex_workspace()
+
         elif command == "/newchat":
             self._new_chat()
 
@@ -725,8 +756,8 @@ class GeekCodeREPL:
             console.print(f"[yellow]Unknown command: {command}[/yellow]")
             # Suggest closest match
             known = ["/help", "/status", "/history", "/models", "/model",
-                     "/tools", "/benchmark", "/loop", "/newchat", "/clear",
-                     "/reset", "/exit", "/quit"]
+                     "/tools", "/benchmark", "/loop", "/reindex", "/newchat",
+                     "/clear", "/reset", "/exit", "/quit"]
             close = [c for c in known if c.startswith(command[:3])]
             if close:
                 console.print(f"[dim]Did you mean: {', '.join(close)}?[/dim]")
