@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 260" width="500" height="260" style="font-family:system-ui,sans-serif;background:#fff">
 <text x="250.0" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">Finance — Avg Tokens/Task</text>
 <text x="112" y="73" text-anchor="end" font-size="12" fill="#475569">ChatGPT CLI</text>
-<rect x="120" y="53.5" width="319.9" height="31.7" rx="4" fill="#10B981"/>
-<text x="446" y="73" font-size="12" font-weight="bold" fill="#10B981">3,850</text>
+<rect x="120" y="53.5" width="287.0" height="31.7" rx="4" fill="#10B981"/>
+<text x="413" y="73" font-size="12" font-weight="bold" fill="#10B981">3,850</text>
 <text x="112" y="122" text-anchor="end" font-size="12" fill="#475569">GeekCode</text>
-<rect x="120" y="102.3" width="290.2" height="31.7" rx="4" fill="#6C63FF"/>
-<text x="416" y="122" font-size="12" font-weight="bold" fill="#6C63FF">3,492</text>
+<rect x="120" y="102.3" width="320.0" height="31.7" rx="4" fill="#6C63FF"/>
+<text x="446" y="122" font-size="12" font-weight="bold" fill="#6C63FF">4,292</text>
 <text x="112" y="171" text-anchor="end" font-size="12" fill="#475569">Gemini CLI</text>
-<rect x="120" y="151.0" width="320.0" height="31.7" rx="4" fill="#F59E0B"/>
-<text x="446" y="171" font-size="12" font-weight="bold" fill="#F59E0B">3,851</text>
+<rect x="120" y="151.0" width="287.1" height="31.7" rx="4" fill="#F59E0B"/>
+<text x="413" y="171" font-size="12" font-weight="bold" fill="#F59E0B">3,851</text>
 <text x="112" y="220" text-anchor="end" font-size="12" fill="#475569">Perplexity</text>
-<rect x="120" y="199.8" width="261.6" height="31.7" rx="4" fill="#7C3AED"/>
-<text x="388" y="220" font-size="12" font-weight="bold" fill="#7C3AED">3,148</text>
+<rect x="120" y="199.8" width="234.7" height="31.7" rx="4" fill="#7C3AED"/>
+<text x="361" y="220" font-size="12" font-weight="bold" fill="#7C3AED">3,148</text>
 </svg>

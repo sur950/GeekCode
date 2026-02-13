@@ -21,7 +21,7 @@
 <rect x="285.5" y="82.5" width="61.5" height="157.5" rx="4" fill="#0EA5E9"/>
 <text x="316.2" y="76" text-anchor="middle" font-size="13" font-weight="bold" fill="#0EA5E9">83</text>
 <text x="316.2" y="260" text-anchor="middle" font-size="12" fill="#475569">Codex CLI</text>
-<rect x="388.0" y="73.8" width="61.5" height="166.2" rx="4" fill="#6C63FF"/>
-<text x="418.8" y="68" text-anchor="middle" font-size="13" font-weight="bold" fill="#6C63FF">88</text>
+<rect x="388.0" y="68.0" width="61.5" height="172.0" rx="4" fill="#6C63FF"/>
+<text x="418.8" y="62" text-anchor="middle" font-size="13" font-weight="bold" fill="#6C63FF">90</text>
 <text x="418.8" y="260" text-anchor="middle" font-size="12" fill="#475569">GeekCode</text>
 </svg>

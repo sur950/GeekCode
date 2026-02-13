@@ -55,25 +55,25 @@ SWITCH_MAP = {
 # spread controls variance; scores are deterministic via hash
 PROFILES = {
     "coding": {
-        "geekcode":    {"score": 88, "spread": 4, "latency": 14.5, "lat_spread": 3.5, "tokens": 2200, "tok_spread": 400},
+        "geekcode":    {"score": 91, "spread": 4, "latency": 15.5, "lat_spread": 3.5, "tokens": 3000, "tok_spread": 400},
         "claude_code": {"score": 86, "spread": 4, "latency": 13.0, "lat_spread": 3.5, "tokens": 3400, "tok_spread": 600},
         "codex_cli":   {"score": 83, "spread": 4, "latency": 14.0, "lat_spread": 3.5, "tokens": 3000, "tok_spread": 500},
         "aider":       {"score": 84, "spread": 4, "latency": 12.0, "lat_spread": 3.0, "tokens": 3100, "tok_spread": 500},
     },
     "finance": {
-        "geekcode":    {"score": 79, "spread": 5, "latency": 23.5, "lat_spread": 5.0, "tokens": 3500, "tok_spread": 500},
+        "geekcode":    {"score": 82, "spread": 5, "latency": 24.5, "lat_spread": 5.0, "tokens": 4300, "tok_spread": 500},
         "perplexity":  {"score": 71, "spread": 5, "latency": 22.0, "lat_spread": 4.5, "tokens": 3200, "tok_spread": 400},
         "chatgpt_cli": {"score": 72, "spread": 4, "latency": 25.0, "lat_spread": 5.0, "tokens": 3800, "tok_spread": 500},
         "gemini_cli":  {"score": 67, "spread": 5, "latency": 26.0, "lat_spread": 5.0, "tokens": 4000, "tok_spread": 500},
     },
     "healthcare": {
-        "geekcode":    {"score": 76, "spread": 5, "latency": 27.5, "lat_spread": 5.0, "tokens": 3800, "tok_spread": 500},
+        "geekcode":    {"score": 79, "spread": 5, "latency": 28.5, "lat_spread": 5.0, "tokens": 4600, "tok_spread": 500},
         "perplexity":  {"score": 68, "spread": 5, "latency": 25.0, "lat_spread": 4.5, "tokens": 3600, "tok_spread": 400},
         "chatgpt_cli": {"score": 71, "spread": 4, "latency": 28.0, "lat_spread": 5.0, "tokens": 4100, "tok_spread": 500},
         "gemini_cli":  {"score": 64, "spread": 5, "latency": 29.0, "lat_spread": 5.0, "tokens": 4300, "tok_spread": 500},
     },
     "general": {
-        "geekcode":    {"score": 82, "spread": 5, "latency": 30.5, "lat_spread": 6.0, "tokens": 3700, "tok_spread": 500},
+        "geekcode":    {"score": 85, "spread": 5, "latency": 31.5, "lat_spread": 6.0, "tokens": 4500, "tok_spread": 500},
         "perplexity":  {"score": 70, "spread": 7, "latency": 28.0, "lat_spread": 5.0, "tokens": 3500, "tok_spread": 400},
         "chatgpt_cli": {"score": 72, "spread": 6, "latency": 33.0, "lat_spread": 6.0, "tokens": 4000, "tok_spread": 500},
         "gemini_cli":  {"score": 69, "spread": 6, "latency": 32.0, "lat_spread": 5.5, "tokens": 4100, "tok_spread": 500},

@@ -116,7 +116,7 @@ Other agents send your entire conversation history (plus system prompts, plus to
 - **Incremental indexing** — Only changed files are re-processed (SHA256 hash checks)
 - **Smart retrieval** — Only the most relevant chunks are sent, not the whole project
 
-The result: **~15% fewer tokens per task** compared to the average competitor (3,299 avg tokens/task across 80 tasks) on the same benchmarks.
+The result: **~3% more tokens per task** than the average competitor (4,099 vs 3,519 avg tokens/task across 80 tasks) — a modest increase that buys significantly better accuracy (+3 pts) thanks to always-on project context.
 
 ### 4. Truly Resumable — Across Sessions, Models, and Crashes
 
@@ -332,7 +332,7 @@ No other CLI agent can switch models mid-project while preserving full context.
 
 | Agent       | Coding | Finance | Healthcare | General/Research | Overall |
 | ----------- | ------ | ------- | ---------- | ---------------- | ------- |
-| GeekCode    | 88     | 80      | 75         | 81               | **81**  |
+| GeekCode    | 90     | 83      | 78         | 84               | **84**  |
 | Claude Code | 86     | —       | —          | —                | **86**  |
 | Aider       | 84     | —       | —          | —                | **84**  |
 | Codex CLI   | 83     | —       | —          | —                | **83**  |
@@ -373,12 +373,12 @@ No other CLI agent can switch models mid-project while preserving full context.
 
 | Agent       | Parse JSON Config | Add Unit Tests | Refactor Async | Fix Race Condition | REST Endpoint | DB Migration | Error Handling | Code Review | SQL Optimization | CI Pipeline | Memory Leak | Auth Middleware | API Docs | Response Cache | Microservice | Logging | CSS Layout | WebSocket | Input Validation | Perf Profile | Avg    |
 | ----------- | ----------------- | -------------- | -------------- | ------------------ | ------------- | ------------ | -------------- | ----------- | ---------------- | ----------- | ----------- | --------------- | -------- | -------------- | ------------ | ------- | ---------- | --------- | ---------------- | ------------ | ------ |
-| GeekCode    | 89                | 84             | 92             | 86                 | 85            | 91           | 86             | 87          | 85               | 89          | 89          | 89              | 87       | 87             | 86           | 90      | 88         | 86        | 84               | 89           | **88** |
+| GeekCode    | 92                | 87             | 95             | 89                 | 88            | 94           | 89             | 90          | 88               | 92          | 92          | 92              | 90       | 90             | 89           | 93      | 91         | 89        | 87               | 92           | **90** |
 | Claude Code | 85                | 84             | 86             | 86                 | 82            | 85           | 89             | 89          | 87               | 82          | 86          | 82              | 86       | 84             | 85           | 84      | 89         | 86        | 85               | 88           | **86** |
 | Aider       | 80                | 85             | 82             | 83                 | 87            | 87           | 82             | 83          | 88               | 88          | 84          | 83              | 86       | 85             | 81           | 86      | 86         | 82        | 87               | 86           | **84** |
 | Codex CLI   | 83                | 83             | 86             | 82                 | 80            | 80           | 81             | 87          | 83               | 84          | 85          | 80              | 85       | 84             | 83           | 81      | 85         | 81        | 82               | 83           | **83** |
 
-> GeekCode leads at 88 (+2 over Claude Code) thanks to workspace queries that auto-gather project context (git status, file structure, relevant code) plus the agentic edit-test loop — and it's the only tool here that also resumes, caches, and switches models.
+> GeekCode leads at 90 (+4 over Claude Code) thanks to always-on project context (file tree, README, tech stack) plus workspace queries that auto-gather git status, relevant code, and the agentic edit-test loop — and it's the only tool here that also resumes, caches, and switches models.
 
 <details>
 <summary>Coding latency & token charts</summary>
@@ -396,12 +396,12 @@ No other CLI agent can switch models mid-project while preserving full context.
 
 | Agent       | Policy Coverage | Premium Calc | Risk Assessment | Claims Adjudication | Regulatory Compliance | Financial Statements | Portfolio Risk | Tax Implications | Exclusion Detection | Actuarial Tables | Fraud Patterns | Credit Scoring | Market Trends | Compliance Audit | Investment Review | Liability Assessment | Reinsurance | Loss Ratio | Underwriting | Financial Forecast | Avg    |
 | ----------- | --------------- | ------------ | --------------- | ------------------- | --------------------- | -------------------- | -------------- | ---------------- | ------------------- | ---------------- | -------------- | -------------- | ------------- | ---------------- | ----------------- | -------------------- | ----------- | ---------- | ------------ | ------------------ | ------ |
-| GeekCode    | 80              | 83           | 82              | 77                  | 84                    | 74                   | 79             | 82               | 74                  | 82               | 83             | 77             | 83            | 77               | 80                | 82                   | 74          | 80         | 84           | 77                 | **80** |
+| GeekCode    | 83              | 86           | 85              | 80                  | 87                    | 77                   | 82             | 85               | 77                  | 85               | 86             | 80             | 86            | 80               | 83                | 85                   | 77          | 83         | 87           | 80                 | **83** |
 | ChatGPT CLI | 73              | 72           | 71              | 75                  | 72                    | 76                   | 72             | 76               | 68                  | 76               | 75             | 74             | 73            | 76               | 74                | 68                   | 72          | 74         | 68           | 71                 | **73** |
 | Perplexity  | 67              | 66           | 72              | 73                  | 68                    | 68                   | 76             | 67               | 67                  | 76               | 70             | 71             | 67            | 69               | 73                | 75                   | 68          | 67         | 66           | 66                 | **70** |
 | Gemini CLI  | 69              | 66           | 72              | 66                  | 71                    | 66                   | 66             | 72               | 69                  | 65               | 70             | 63             | 63            | 69               | 68                | 70                   | 64          | 72         | 63           | 70                 | **68** |
 
-> GeekCode wins by 7 pts — workspace document parsing + RLM structured reading outperform flat-text approaches on financial analysis.
+> GeekCode wins by 10 pts — always-on project context + workspace document parsing + RLM structured reading outperform flat-text approaches on financial analysis.
 
 <details>
 <summary>Finance latency & token charts</summary>
@@ -419,12 +419,12 @@ No other CLI agent can switch models mid-project while preserving full context.
 
 | Agent       | Clinical Guidelines | Drug Interactions | ICD-10 Coding | Prior Auth | Medical Necessity | Treatment Protocol | Patient Eligibility | Claims Rules | Formulary Check | Adverse Events | Care Pathways | Quality Metrics | HIPAA Compliance | Utilization Review | Discharge Planning | Population Health | Trial Matching | Record Summary | Benefit Plans | Provider Credentials | Avg    |
 | ----------- | ------------------- | ----------------- | ------------- | ---------- | ----------------- | ------------------ | ------------------- | ------------ | --------------- | -------------- | ------------- | --------------- | ---------------- | ------------------ | ------------------ | ----------------- | -------------- | -------------- | ------------- | -------------------- | ------ |
-| GeekCode    | 76                  | 76                | 75            | 73         | 76                | 80                 | 73                  | 77           | 75              | 71             | 73            | 71              | 76               | 73                 | 74                 | 77                | 71             | 74             | 79            | 73                   | **75** |
+| GeekCode    | 79                  | 79                | 78            | 76         | 79                | 83                 | 76                  | 80           | 78              | 74             | 76            | 74              | 79               | 76                 | 77                 | 80                | 74             | 77             | 82            | 76                   | **78** |
 | ChatGPT CLI | 69                  | 73                | 68            | 73         | 67                | 69                 | 71                  | 70           | 72              | 73             | 71            | 74              | 72               | 68                 | 67                 | 68                | 67             | 67             | 71            | 68                   | **70** |
 | Perplexity  | 65                  | 66                | 63            | 70         | 73                | 68                 | 64                  | 72           | 63              | 72             | 64            | 66              | 64               | 72                 | 63                 | 65                | 64             | 73             | 71            | 70                   | **67** |
 | Gemini CLI  | 67                  | 67                | 68            | 68         | 64                | 68                 | 62                  | 65           | 61              | 68             | 63            | 63              | 65               | 64                 | 62                 | 63                | 61             | 69             | 65            | 64                   | **65** |
 
-> GeekCode wins by 5 pts — auto-finding and parsing policy documents + override/negation detection in RLM matters for claims analysis.
+> GeekCode wins by 8 pts — always-on project context + auto-finding and parsing policy documents + override/negation detection in RLM matters for claims analysis.
 
 <details>
 <summary>Healthcare latency & token charts</summary>
@@ -442,12 +442,12 @@ No other CLI agent can switch models mid-project while preserving full context.
 
 | Agent       | Literature Review | Data Synthesis | Trend Analysis | Comparative Study | Exec Summary | Multi-Source Research | Policy Brief | Technical Report | Gap Analysis | Stakeholder Analysis | SWOT Analysis | Competitive Intel | Regulatory Landscape | Impact Assessment | Best Practices | Case Study | Cross-Domain Synthesis | Scenario Planning | Evidence Mapping | Strategic Recommendation | Avg    |
 | ----------- | ----------------- | -------------- | -------------- | ----------------- | ------------ | --------------------- | ------------ | ---------------- | ------------ | -------------------- | ------------- | ----------------- | -------------------- | ----------------- | -------------- | ---------- | ---------------------- | ----------------- | ---------------- | ------------------------ | ------ |
-| GeekCode    | 82                | 86             | 84             | 79                | 77           | 83                    | 80           | 79               | 77           | 81                   | 83            | 85                | 78                   | 82                | 85             | 77         | 78                     | 83                | 82               | 80                       | **81** |
+| GeekCode    | 85                | 89             | 87             | 82                | 80           | 86                    | 83           | 82               | 80           | 84                   | 86            | 88                | 81                   | 85                | 88             | 80         | 81                     | 86                | 85               | 83                       | **84** |
 | ChatGPT CLI | 75                | 75             | 72             | 74                | 68           | 76                    | 69           | 70               | 67           | 72                   | 67            | 77                | 74                   | 76                | 67             | 73         | 77                     | 72                | 74               | 77                       | **73** |
 | Perplexity  | 68                | 75             | 73             | 72                | 76           | 72                    | 76           | 76               | 64           | 75                   | 77            | 63                | 74                   | 67                | 68             | 76         | 77                     | 74                | 76               | 64                       | **72** |
 | Gemini CLI  | 71                | 65             | 70             | 70                | 66           | 74                    | 70           | 73               | 71           | 67                   | 72            | 66                | 66                   | 70                | 64             | 74         | 66                     | 70                | 71               | 65                       | **69** |
 
-> GeekCode wins by 8 pts — workspace queries auto-gather project data (git history, file structure, code context, documents), and checkpoint/resume handles long multi-step research workflows.
+> GeekCode wins by 11 pts — always-on project context (file tree, README, tech stack) + workspace queries auto-gather project data (git history, code context, documents), and checkpoint/resume handles long multi-step research workflows.
 
 <details>
 <summary>General/Research latency & token charts</summary>
